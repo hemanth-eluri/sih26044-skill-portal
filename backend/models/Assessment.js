@@ -50,9 +50,19 @@ const AssessmentResultSchema = new mongoose.Schema({
   },
   assessmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Assessment',
-    required: true
+    ref: 'Assessment'
   },
+  assessmentSessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AssessmentSession',
+    index: true
+  },
+  mode: {
+    type: String,
+    enum: ['legacy', 'profile-skills', 'target-role', 'custom'],
+    default: 'legacy'
+  },
+  skillsAssessed: [String],
   startedAt: {
     type: Date,
     default: Date.now
@@ -80,7 +90,13 @@ const AssessmentResultSchema = new mongoose.Schema({
         default: 'beginner'
       }
     }
-  ]
+  ],
+  topicScores: [{
+    topic: String,
+    correctAnswers: Number,
+    totalQuestions: Number,
+    score: Number
+  }]
 });
 
 module.exports = {

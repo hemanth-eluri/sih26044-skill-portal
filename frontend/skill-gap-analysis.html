@@ -237,6 +237,12 @@
         // Select role
         async function selectRole(roleId, roleTitle) {
             selectedRole = roleId;
+
+            const saveResult = await selectCareerRole(roleId);
+            if (!saveResult.success) {
+                showError(saveResult.error || 'Unable to save target career role');
+                return;
+            }
             
             const roleResult = await fetchCareerRole(roleId);
             if (roleResult.success) {

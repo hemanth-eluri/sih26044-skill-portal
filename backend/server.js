@@ -25,6 +25,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/assessments', require('./routes/assessments'));
 app.use('/api/career-roles', require('./routes/careerRoles'));
+app.use('/api/skills', require('./routes/skills'));
 app.use('/api/opportunities', require('./routes/opportunities'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/companies', require('./routes/companies'));

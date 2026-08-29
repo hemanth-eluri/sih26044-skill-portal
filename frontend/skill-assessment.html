@@ -56,50 +56,25 @@
         </div>
 
         <!-- Assessment Selector -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-6 col-lg-3">
-                <div class="assessment-card" onclick="startAssessment('programming')">
-                    <div class="assessment-icon">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <h6>Programming</h6>
-                    <p class="small text-muted">Python, Java, JavaScript, etc.</p>
-                    <span class="badge bg-primary">8 Questions</span>
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-body">
+                <h5>Choose what you want to assess</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><label class="form-check border rounded p-3 h-100"><input class="form-check-input assessment-mode" type="radio" name="assessmentMode" value="profile-skills" checked><span class="form-check-label ms-2"><strong>My Profile Skills</strong><br><small class="text-muted">Choose from skills you saved.</small></span></label></div>
+                    <div class="col-md-4"><label class="form-check border rounded p-3 h-100"><input class="form-check-input assessment-mode" type="radio" name="assessmentMode" value="target-role"><span class="form-check-label ms-2"><strong>My Target Role</strong><br><small class="text-muted">Use database role requirements.</small></span></label></div>
+                    <div class="col-md-4"><label class="form-check border rounded p-3 h-100"><input class="form-check-input assessment-mode" type="radio" name="assessmentMode" value="custom"><span class="form-check-label ms-2"><strong>Choose Manually</strong><br><small class="text-muted">Choose database catalog skills.</small></span></label></div>
                 </div>
+                <div id="profileSkills" class="row g-2"><p class="text-muted">Loading your profile skills...</p></div>
+                <div id="targetRoleSummary" class="alert alert-light border" hidden></div>
+                <div id="customSkills" class="row g-2" hidden></div>
+                <button class="btn btn-sm btn-outline-secondary mt-3" type="button" id="selectAllSkillsButton" onclick="selectAllSkills()" hidden>Select All</button>
+                <button class="btn btn-primary mt-3" type="button" id="generateAssessmentButton" onclick="startSelectedAssessment()" disabled>Start Assessment</button>
+                <p id="assessmentMessage" class="small text-muted mt-3 mb-0"></p>
             </div>
+        </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="assessment-card" onclick="startAssessment('data-science')">
-                    <div class="assessment-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h6>Data Science</h6>
-                    <p class="small text-muted">ML, Statistics, Analytics</p>
-                    <span class="badge bg-info">6 Questions</span>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="assessment-card" onclick="startAssessment('communication')">
-                    <div class="assessment-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <h6>Communication</h6>
-                    <p class="small text-muted">Soft skills assessment</p>
-                    <span class="badge bg-success">5 Questions</span>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="assessment-card" onclick="startAssessment('aptitude')">
-                    <div class="assessment-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <h6>Aptitude</h6>
-                    <p class="small text-muted">Logical and analytical</p>
-                    <span class="badge bg-warning">10 Questions</span>
-                </div>
-            </div>
+        <div id="assessmentResult" class="card border-0 shadow-sm mb-5" hidden>
+            <div class="card-body p-4"><h5>Assessment Result</h5><div id="resultContent"></div><a class="btn btn-outline-primary mt-3" href="skill-gap-analysis.html">View Skill Analysis</a></div>
         </div>
 
         <!-- Assessment Questionnaire (Hidden by default) -->
@@ -125,35 +100,10 @@
 
                     <!-- Question -->
                     <form id="questionForm">
-                        <h6 id="questionText" class="mb-4">What is the time complexity of binary search?</h6>
+                            <h6 id="questionText" class="mb-4"></h6>
 
                         <!-- Options -->
-                        <div id="optionsContainer">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="answer" value="a" id="optionA">
-                                <label class="form-check-label" for="optionA">
-                                    O(n)
-                                </label>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="answer" value="b" id="optionB">
-                                <label class="form-check-label" for="optionB">
-                                    O(log n)
-                                </label>
-                            </div>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="answer" value="c" id="optionC">
-                                <label class="form-check-label" for="optionC">
-                                    O(n²)
-                                </label>
-                            </div>
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="radio" name="answer" value="d" id="optionD">
-                                <label class="form-check-label" for="optionD">
-                                    O(1)
-                                </label>
-                            </div>
-                        </div>
+                        <div id="optionsContainer"></div>
 
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="previousQuestion()" style="display: none;">Previous</button>
@@ -179,40 +129,8 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <i class="fas fa-code me-2 text-primary"></i>Programming
-                                </td>
-                                <td>Aug 15, 2024</td>
-                                <td>
-                                    <strong>78%</strong>
-                                </td>
-                                <td><span class="badge bg-success">Completed</span></td>
-                                <td><a href="#" class="small">View Results</a></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <i class="fas fa-comments me-2 text-success"></i>Communication
-                                </td>
-                                <td>Aug 10, 2024</td>
-                                <td>
-                                    <strong>65%</strong>
-                                </td>
-                                <td><span class="badge bg-success">Completed</span></td>
-                                <td><a href="#" class="small">View Results</a></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <i class="fas fa-chart-bar me-2 text-info"></i>Data Science
-                                </td>
-                                <td>Aug 5, 2024</td>
-                                <td>
-                                    <strong>82%</strong>
-                                </td>
-                                <td><span class="badge bg-success">Completed</span></td>
-                                <td><a href="#" class="small">View Results</a></td>
-                            </tr>
+                            <tbody id="assessmentHistory">
+                                <tr><td colspan="5" class="text-muted">Loading assessment history...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -228,64 +146,107 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let currentQuestion = 1;
-        let totalQuestions = 8;
-        const questions = [
-            { q: "What is the time complexity of binary search?", type: "mcq" },
-            { q: "Which data structure uses LIFO?", type: "mcq" },
-            { q: "What does REST stand for?", type: "mcq" },
-            { q: "Explain your experience with version control", type: "text" },
-            { q: "What is the difference between SQL and NoSQL?", type: "mcq" },
-            { q: "Have you used any cloud platforms?", type: "text" },
-            { q: "What is your approach to debugging?", type: "text" },
-            { q: "Rate your Python proficiency", type: "scale" }
-        ];
+    <script src="js/app.js"></script>
+    <script type="text/plain" id="legacyAssessmentPageScript">
+        let currentQuestion = 0;
+        let totalQuestions = 0;
+        let assessment = null;
+        let answers = [];
+        let profileSkills = [];
 
-        function startAssessment(type) {
-            document.querySelector('.row.g-4.mb-5').style.display = 'none';
+        async function loadAssessmentProfile() {
+            if (!isUserLoggedIn()) return window.location.href = 'login.html';
+            const result = await fetchStudentProfile();
+            if (!result.success) return showError(result.error || 'Unable to load your profile');
+            profileSkills = (result.student.skills || []).map(skill => skill.name);
+            const container = document.getElementById('profileSkills');
+            container.innerHTML = profileSkills.length ? profileSkills.map((skill, index) => { const storedSkill = result.student.skills[index]; return `<div class="col-md-4"><label class="form-check"><input class="form-check-input skill-choice" type="checkbox" value="${escapeHtml(skill)}" id="skill-${index}"><span class="form-check-label">${escapeHtml(skill)} — ${escapeHtml(storedSkill.level || storedSkill.selfDeclaredLevel || 'beginner')}</span></label></div>`; }).join('') : '<p class="text-muted">No skills are currently saved in your profile. <a href="student-profile.html">Add Skills to Profile</a></p>';
+            document.getElementById('selectAllSkillsButton').hidden = !profileSkills.length;
+            document.querySelectorAll('.skill-choice').forEach(input => input.addEventListener('change', updateGenerateButton));
+            loadAssessmentHistory();
+        }
+
+        function selectAllSkills() { document.querySelectorAll('.skill-choice').forEach(input => { input.checked = true; }); updateGenerateButton(); }
+
+        async function loadAssessmentHistory() {
+            const result = await fetchMyAssessmentResults();
+            const history = document.getElementById('assessmentHistory');
+            if (!result.success) { history.innerHTML = `<tr><td colspan="5" class="text-danger">${escapeHtml(result.error)}</td></tr>`; return; }
+            history.innerHTML = result.results.length ? result.results.map(item => `<tr><td>${escapeHtml(item.assessmentId?.title || 'Assessment')}</td><td>${item.completedAt ? new Date(item.completedAt).toLocaleString() : 'Not available'}</td><td><strong>${item.score}%</strong></td><td><span class="badge bg-success">Completed</span></td><td>${escapeHtml((item.skillScores || []).map(score => `${score.skill}: ${score.score}%`).join(', '))}</td></tr>`).join('') : '<tr><td colspan="5" class="text-muted">No completed assessments yet.</td></tr>';
+        }
+
+        function updateGenerateButton() {
+            document.getElementById('generateAssessmentButton').disabled = !document.querySelector('.skill-choice:checked');
+        }
+
+        async function generateSelectedAssessment() {
+            const skills = [...document.querySelectorAll('.skill-choice:checked')].map(input => input.value);
+            document.getElementById('assessmentMessage').textContent = 'Loading questions from the curated question bank...';
+            const result = await generateAssessment(skills);
+            if (!result.success) return document.getElementById('assessmentMessage').textContent = result.error || 'AI assessment generation unavailable.';
+            assessment = result.assessment;
+            answers = Array(assessment.questions.length).fill(null);
+            currentQuestion = 0;
+            document.querySelector('.card.border-0.shadow-sm.mb-5').style.display = 'none';
             document.getElementById('assessmentForm').style.display = 'block';
-            document.getElementById('assessmentTitle').textContent = type.charAt(0).toUpperCase() + type.slice(1) + ' Assessment';
-            currentQuestion = 1;
-            updateProgress();
+            document.getElementById('assessmentTitle').textContent = assessment.title;
+            totalQuestions = assessment.questions.length;
+            renderQuestion();
         }
 
         function cancelAssessment() {
-            document.querySelector('.row.g-4.mb-5').style.display = 'grid';
+            document.querySelector('.card.border-0.shadow-sm.mb-5').style.display = 'block';
             document.getElementById('assessmentForm').style.display = 'none';
         }
 
-        function updateProgress() {
-            const progress = (currentQuestion / totalQuestions) * 100;
+        function renderQuestion() {
+            const question = assessment.questions[currentQuestion];
+            const progress = ((currentQuestion + 1) / totalQuestions) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('currentQuestion').textContent = currentQuestion;
+            document.getElementById('currentQuestion').textContent = currentQuestion + 1;
             document.getElementById('totalQuestions').textContent = totalQuestions;
             document.getElementById('progressPercent').textContent = Math.round(progress) + '%';
-            document.getElementById('prevBtn').style.display = currentQuestion === 1 ? 'none' : 'block';
-            document.getElementById('nextBtn').textContent = currentQuestion === totalQuestions ? 'Submit' : 'Next';
+            document.getElementById('prevBtn').style.display = currentQuestion === 0 ? 'none' : 'block';
+            document.getElementById('nextBtn').textContent = currentQuestion === totalQuestions - 1 ? 'Submit' : 'Next';
+            document.getElementById('questionText').textContent = question.questionText;
+            document.getElementById('optionsContainer').innerHTML = question.options.map((option, index) => `<div class="form-check mb-3"><input class="form-check-input" type="radio" name="answer" value="${index}" id="option-${index}" ${answers[currentQuestion] === String(index) ? 'checked' : ''}><label class="form-check-label" for="option-${index}">${escapeHtml(option)}</label></div>`).join('');
         }
 
         function nextQuestion() {
-            if (currentQuestion < totalQuestions) {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (!selected) return showError('Select an answer before continuing');
+            answers[currentQuestion] = selected.value;
+            if (currentQuestion < totalQuestions - 1) {
                 currentQuestion++;
-                updateProgress();
+                renderQuestion();
             } else {
-                alert('Assessment submitted successfully!');
-                cancelAssessment();
+                submitGeneratedAssessment();
             }
         }
 
         function previousQuestion() {
-            if (currentQuestion > 1) {
+            if (currentQuestion > 0) {
+                const selected = document.querySelector('input[name="answer"]:checked');
+                if (selected) answers[currentQuestion] = selected.value;
                 currentQuestion--;
-                updateProgress();
+                renderQuestion();
             }
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
+        async function submitGeneratedAssessment() {
+            const result = await submitAssessment(assessment._id, answers);
+            if (!result.success) return showError(result.error || 'Assessment submission failed');
+            showSuccess(`Assessment scored ${result.result.score}%`);
+            cancelAssessment();
+            loadAssessmentProfile();
         }
+
+        function logout() {
+            logoutUser();
+        }
+
+        loadAssessmentProfile();
     </script>
+    <script src="js/assessment-page.js"></script>
 </body>
 </html>

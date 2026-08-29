@@ -64,7 +64,7 @@
                 </div>
                 <div class="col-lg-4 text-lg-end">
                     <div class="progress-card">
-                        <div class="progress-percentage">45%</div>
+                        <div class="progress-percentage" id="profileCompletion">0%</div>
                         <p class="text-muted mb-0 small">Profile Complete</p>
                     </div>
                 </div>
@@ -134,54 +134,7 @@
                             <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Your Skill Twin (Preview)</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="skill-bar">
-                                        <div class="skill-label">
-                                            <span>Python</span>
-                                            <span class="fw-bold">78%</span>
-                                        </div>
-                                        <div class="progress" role="progressbar" style="height: 8px;">
-                                            <div class="progress-bar" style="width: 78%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="skill-bar">
-                                        <div class="skill-label">
-                                            <span>Data Structures</span>
-                                            <span class="fw-bold">65%</span>
-                                        </div>
-                                        <div class="progress" role="progressbar" style="height: 8px;">
-                                            <div class="progress-bar" style="width: 65%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <div class="skill-bar">
-                                        <div class="skill-label">
-                                            <span>Web Development</span>
-                                            <span class="fw-bold">72%</span>
-                                        </div>
-                                        <div class="progress" role="progressbar" style="height: 8px;">
-                                            <div class="progress-bar" style="width: 72%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="skill-bar">
-                                        <div class="skill-label">
-                                            <span>Communication</span>
-                                            <span class="fw-bold">55%</span>
-                                        </div>
-                                        <div class="progress" role="progressbar" style="height: 8px;">
-                                            <div class="progress-bar" style="width: 55%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="row mb-4" id="skillTwinPreview"></div>
                             <a href="skill-display.html" class="btn btn-primary btn-sm">View Complete Profile</a>
                         </div>
                     </div>
@@ -191,35 +144,7 @@
                         <div class="card-header bg-gradient text-white">
                             <h5 class="mb-0"><i class="fas fa-map-signs me-2"></i>Recommended Next Steps</h5>
                         </div>
-                        <div class="card-body">
-                            <div class="next-step mb-4 pb-4 border-bottom">
-                                <div class="d-flex align-items-start">
-                                    <div class="step-number">1</div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6>Set Career Goal</h6>
-                                        <p class="text-muted small mb-0">Choose your target role to identify skill gaps</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="next-step mb-4 pb-4 border-bottom">
-                                <div class="d-flex align-items-start">
-                                    <div class="step-number">2</div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6>Complete Assessment</h6>
-                                        <p class="text-muted small mb-0">Validate your skills across different categories</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="next-step">
-                                <div class="d-flex align-items-start">
-                                    <div class="step-number">3</div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6>View Gap Analysis</h6>
-                                        <p class="text-muted small mb-0">Get personalized learning recommendations</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="card-body" id="nextSteps"><p class="text-muted mb-0">Loading actions based on your profile...</p></div>
                     </div>
                 </div>
 
@@ -231,8 +156,8 @@
                             <div class="avatar-lg mb-3">
                                 <i class="fas fa-user-circle"></i>
                             </div>
-                            <h6>John Doe</h6>
-                            <p class="text-muted small">Student | B.Tech CSE</p>
+                            <h6 id="profileName">Student</h6>
+                            <p class="text-muted small" id="profileSummary">Complete your profile to add details.</p>
                             <button class="btn btn-sm btn-outline-primary" onclick="location.href='student-profile.html'">Edit Profile</button>
                         </div>
                     </div>
@@ -246,19 +171,19 @@
                             <div class="stat-item mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="small">Assessments Taken</span>
-                                    <span class="badge bg-primary">3</span>
+                                    <span class="badge bg-primary" id="assessmentCount">0</span>
                                 </div>
                             </div>
                             <div class="stat-item mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="small">Skills Identified</span>
-                                    <span class="badge bg-info">8</span>
+                                    <span class="badge bg-info" id="skillCount">0</span>
                                 </div>
                             </div>
                             <div class="stat-item">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="small">Profile Strength</span>
-                                    <span class="badge bg-success">Good</span>
+                                    <span class="badge bg-secondary" id="profileStrength">No verified evidence</span>
                                 </div>
                             </div>
                         </div>
@@ -306,8 +231,34 @@
         async function loadDashboard() {
             const result = await fetchStudentProfile();
             if (result.success) {
-                const student = result.student;
-                document.querySelector('.progress-percentage').textContent = student.profileCompletion + '%';
+                const student = result.student || {};
+                const user = result.user || {};
+                const education = student.education || [];
+                const skills = student.skills || [];
+                const projects = student.projects || [];
+                const certifications = student.certifications || [];
+                const assessments = student.assessmentResults || [];
+                const hasBasicInfo = Boolean(user.name && user.email);
+                const completion = Math.round(([hasBasicInfo, education.length > 0, skills.length > 0, projects.length > 0, certifications.length > 0].filter(Boolean).length / 5) * 100);
+
+                document.getElementById('profileCompletion').textContent = `${completion}%`;
+                document.getElementById('profileName').textContent = user.name || 'Student';
+                document.getElementById('profileSummary').textContent = education[0] ? `${education[0].degree || 'Student'}${education[0].institution ? ` | ${education[0].institution}` : ''}` : 'Complete your profile to add details.';
+                document.getElementById('assessmentCount').textContent = assessments.length;
+                document.getElementById('skillCount').textContent = skills.length;
+                const evidenceCount = skills.reduce((total, skill) => total + (skill.evidence || []).length, 0);
+                document.getElementById('profileStrength').textContent = evidenceCount ? 'Evidence recorded' : (skills.length ? 'Self-declared only' : 'No verified evidence');
+                document.getElementById('profileStrength').className = `badge ${skills.length ? 'bg-info' : 'bg-secondary'}`;
+
+                const preview = document.getElementById('skillTwinPreview');
+                preview.innerHTML = skills.length ? skills.slice(0, 6).map(skill => `<div class="col-md-6 mb-3"><div class="skill-label"><span>${escapeHtml(skill.name)}</span><span class="text-muted">${escapeHtml(skill.level || 'Not assessed')}</span></div><small class="text-muted">${skill.evidence && skill.evidence.length ? `${skill.evidence.length} evidence record${skill.evidence.length === 1 ? '' : 's'}` : 'Self declared'}</small></div>`).join('') : '<div class="col-12"><p class="text-muted mb-3">No verified skill evidence yet.</p><a href="student-profile.html" class="btn btn-sm btn-outline-primary me-2">Complete Profile</a><a href="skill-assessment.html" class="btn btn-sm btn-outline-info">Take Assessment</a></div>';
+
+                const actions = [];
+                if (!education.length) actions.push(['Complete Profile', 'Add education and experience.', 'student-profile.html']);
+                if (!skills.length || !evidenceCount) actions.push(['Take Assessment', 'Create assessment-backed skill evidence.', 'skill-assessment.html']);
+                if (!student.targetRole) actions.push(['Select Career Goal', 'Choose a target role for gap analysis.', 'skill-gap-analysis.html']);
+                if (!projects.length) actions.push(['Add Project', 'Add a project to your stored profile evidence.', 'student-profile.html']);
+                document.getElementById('nextSteps').innerHTML = actions.length ? actions.slice(0, 4).map((action, index) => `<div class="next-step mb-3 pb-3 ${index < Math.min(actions.length, 4) - 1 ? 'border-bottom' : ''}"><div class="d-flex align-items-start"><div class="step-number">${index + 1}</div><div class="flex-grow-1 ms-3"><h6>${escapeHtml(action[0])}</h6><p class="text-muted small mb-0">${escapeHtml(action[1])}</p><a href="${action[2]}" class="btn btn-sm btn-outline-primary mt-2">Open</a></div></div></div>`).join('') : '<p class="text-muted mb-0">Your current profile has no pending actions.</p>';
             }
         }
 

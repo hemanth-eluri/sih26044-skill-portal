@@ -114,8 +114,9 @@ describe('Authentication API', () => {
           role: 'student'
         });
 
-      expect(response.status).toBe(400);
-      expect(response.body.error).toContain('User already exists');
+      expect(response.status).toBe(409);
+      expect(response.body.code).toBe('EMAIL_ALREADY_REGISTERED');
+      expect(response.body.message).toContain('account already exists');
     });
 
     test('should reject registration with mismatched passwords', async () => {

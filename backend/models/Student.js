@@ -7,6 +7,28 @@ const StudentSchema = new mongoose.Schema({
     required: true
   },
   headline: String,
+  contactEmail: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid contact email']
+  },
+  institution: String,
+  degree: String,
+  branch: String,
+  currentYear: Number,
+  graduationYear: Number,
+  fieldsOfInterest: [String],
+  industriesOfInterest: [String],
+  preferredRoles: [String],
+  primaryTargetRole: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CareerRole'
+  },
+  secondaryTargetRoles: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CareerRole'
+  }],
   education: [
     {
       degree: String,
@@ -40,6 +62,10 @@ const StudentSchema = new mongoose.Schema({
   certifications: [
     {
       name: String,
+      selfDeclaredLevel: String,
+      confidenceLevel: Number,
+      yearsOfExperience: Number,
+      interestLevel: Number,
       provider: String,
       issueDate: Date,
       expiryDate: Date,
@@ -49,10 +75,19 @@ const StudentSchema = new mongoose.Schema({
   skills: [
     {
       name: String,
+      selfDeclaredLevel: {
+        type: String,
+        enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+        default: 'beginner'
+      },
       level: {
         type: String,
         enum: ['beginner', 'intermediate', 'advanced', 'expert'],
         default: 'beginner'
+      },
+      wantToImprove: {
+        type: Boolean,
+        default: false
       },
       endorsements: {
         type: Number,

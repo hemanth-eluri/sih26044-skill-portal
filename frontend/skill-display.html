@@ -60,25 +60,25 @@
         <div class="row g-4 mb-5">
             <div class="col-md-3 text-center">
                 <div class="stat-box">
-                    <div class="stat-value">72%</div>
+                    <div class="stat-value" id="overallScore">Not available</div>
                     <div class="stat-label">Overall Score</div>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="stat-box">
-                    <div class="stat-value">8</div>
+                    <div class="stat-value" id="skillsIdentified">0</div>
                     <div class="stat-label">Skills Identified</div>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="stat-box">
-                    <div class="stat-value">3</div>
+                    <div class="stat-value" id="assessmentsTaken">0</div>
                     <div class="stat-label">Assessments</div>
                 </div>
             </div>
             <div class="col-md-3 text-center">
                 <div class="stat-box">
-                    <div class="stat-value">Strong</div>
+                    <div class="stat-value" id="profileStatus">No evidence</div>
                     <div class="stat-label">Profile Status</div>
                 </div>
             </div>
@@ -92,95 +92,7 @@
                         <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Skills Breakdown</h5>
                     </div>
                     <div class="card-body">
-                        <!-- Skill 1 -->
-                        <div class="skill-section mb-4 pb-4 border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Python Programming</h6>
-                                <span class="badge bg-success">78%</span>
-                            </div>
-                            <div class="progress mb-2" role="progressbar" style="height: 8px;">
-                                <div class="progress-bar bg-success" style="width: 78%"></div>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success me-1"></i>Good assessment performance
-                                <br>
-                                <i class="fas fa-check-circle text-success me-1"></i>Multiple relevant projects
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Needs: Advanced problem solving
-                            </small>
-                        </div>
-
-                        <!-- Skill 2 -->
-                        <div class="skill-section mb-4 pb-4 border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Data Structures</h6>
-                                <span class="badge bg-success">72%</span>
-                            </div>
-                            <div class="progress mb-2" role="progressbar" style="height: 8px;">
-                                <div class="progress-bar bg-success" style="width: 72%"></div>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success me-1"></i>Assessment score: 85/100
-                                <br>
-                                <i class="fas fa-check-circle text-success me-1"></i>Applied in 2 projects
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Needs: Graph algorithms
-                            </small>
-                        </div>
-
-                        <!-- Skill 3 -->
-                        <div class="skill-section mb-4 pb-4 border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Web Development</h6>
-                                <span class="badge bg-info">65%</span>
-                            </div>
-                            <div class="progress mb-2" role="progressbar" style="height: 8px;">
-                                <div class="progress-bar bg-info" style="width: 65%"></div>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success me-1"></i>1 major project
-                                <br>
-                                <i class="fas fa-check-circle text-success me-1"></i>Django experience
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Needs: React/Frontend expertise
-                            </small>
-                        </div>
-
-                        <!-- Skill 4 -->
-                        <div class="skill-section mb-4 pb-4 border-bottom">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Machine Learning</h6>
-                                <span class="badge bg-warning">55%</span>
-                            </div>
-                            <div class="progress mb-2" role="progressbar" style="height: 8px;">
-                                <div class="progress-bar bg-warning" style="width: 55%"></div>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-check-circle text-success me-1"></i>Scikit-learn certification
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Limited project experience
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Needs: Deep Learning, NLP
-                            </small>
-                        </div>
-
-                        <!-- Skill 5 -->
-                        <div class="skill-section">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">Communication Skills</h6>
-                                <span class="badge bg-danger">45%</span>
-                            </div>
-                            <div class="progress mb-2" role="progressbar" style="height: 8px;">
-                                <div class="progress-bar bg-danger" style="width: 45%"></div>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Limited presentation experience
-                                <br>
-                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>Few team project evidences
-                                <br>
-                                <i class="fas fa-lightbulb text-info me-1"></i>Recommended: Presentation workshops
-                            </small>
-                        </div>
+                        <div id="skillsBreakdown"><p class="text-muted">Loading your stored skills...</p></div>
                     </div>
                 </div>
 
@@ -200,36 +112,9 @@
                             </select>
                         </div>
 
-                        <div class="gap-section mt-4">
-                            <h6 class="mb-3">Gap Analysis for Software Developer</h6>
-                            <div class="gap-item mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span><i class="fas fa-check text-success me-2"></i>Python</span>
-                                    <span class="small">Your: 78% | Required: 70%</span>
-                                </div>
-                                <small class="text-success">✓ Matched</small>
-                            </div>
-                            <div class="gap-item mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span><i class="fas fa-check text-success me-2"></i>Data Structures</span>
-                                    <span class="small">Your: 72% | Required: 75%</span>
-                                </div>
-                                <small class="text-warning">⚠ Nearly Matched - Improve by 5%</small>
-                            </div>
-                            <div class="gap-item mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span><i class="fas fa-times text-danger me-2"></i>System Design</span>
-                                    <span class="small">Your: 0% | Required: 60%</span>
-                                </div>
-                                <small class="text-danger">✗ Gap: Need to learn System Design</small>
-                            </div>
-                            <div class="gap-item">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span><i class="fas fa-times text-danger me-2"></i>Database Design</span>
-                                    <span class="small">Your: 40% | Required: 70%</span>
-                                </div>
-                                <small class="text-danger">✗ Gap: Improve by 30%</small>
-                            </div>
+                        <div class="gap-section mt-4" id="gapAnalysisState">
+                            <p class="text-muted mb-3">Select a target role to compare your stored evidence with role requirements.</p>
+                            <a href="skill-gap-analysis.html" class="btn btn-sm btn-outline-primary">Open Gap Analysis</a>
                         </div>
                     </div>
                 </div>
@@ -253,44 +138,7 @@
                         <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Recommended Actions</h6>
                     </div>
                     <div class="card-body">
-                        <div class="action-list">
-                            <div class="action-item mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-start">
-                                    <span class="badge bg-danger me-3">1</span>
-                                    <div>
-                                        <h6 class="small mb-1">Learn System Design</h6>
-                                        <p class="small text-muted mb-0">Critical gap for your target role</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="action-item mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-start">
-                                    <span class="badge bg-warning me-3">2</span>
-                                    <div>
-                                        <h6 class="small mb-1">Improve Communication</h6>
-                                        <p class="small text-muted mb-0">Soft skills are valued highly</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="action-item mb-3 pb-3 border-bottom">
-                                <div class="d-flex align-items-start">
-                                    <span class="badge bg-info me-3">3</span>
-                                    <div>
-                                        <h6 class="small mb-1">Advanced Database Design</h6>
-                                        <p class="small text-muted mb-0">Take online course or project</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="action-item">
-                                <div class="d-flex align-items-start">
-                                    <span class="badge bg-success me-3">4</span>
-                                    <div>
-                                        <h6 class="small mb-1">Build Real-world Project</h6>
-                                        <p class="small text-muted mb-0">Showcase your full-stack skills</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="action-list" id="recommendedActions"><p class="text-muted mb-0">Recommendations will appear after verified evidence and a target role are available.</p></div>
                     </div>
                 </div>
             </div>
@@ -305,39 +153,43 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
     <script>
-        // Initialize skill chart
-        const ctx = document.getElementById('skillChart').getContext('2d');
-        const skillChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Strong (70%+)', 'Moderate (50-70%)', 'Developing (<50%)'],
-                datasets: [{
-                    data: [60, 30, 10],
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
+        async function loadSkillTwin() {
+            if (!isUserLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
             }
-        });
+            const result = await fetchStudentProfile();
+            if (!result.success) {
+                document.getElementById('skillsBreakdown').innerHTML = `<p class="text-danger">${result.error || 'Unable to load your skills.'}</p>`;
+                return;
+            }
 
-        function updateGapAnalysis() {
-            // This would be connected to backend API
-            alert('Gap analysis updated for selected role');
+            const student = result.student || {};
+            const skills = student.skills || [];
+            const assessments = student.assessmentResults || [];
+            document.getElementById('skillsIdentified').textContent = skills.length;
+            document.getElementById('assessmentsTaken').textContent = assessments.length;
+            document.getElementById('overallScore').textContent = 'Not calculated';
+            document.getElementById('profileStatus').textContent = skills.length ? 'Stored evidence' : 'No evidence';
+
+            const breakdown = document.getElementById('skillsBreakdown');
+            breakdown.innerHTML = skills.length ? skills.map(skill => `<div class="skill-section mb-4 pb-4 border-bottom"><div class="d-flex justify-content-between align-items-center mb-2"><h6 class="mb-0">${escapeHtml(skill.name)}</h6><span class="badge bg-secondary">${escapeHtml(skill.level || 'Not assessed')}</span></div><small class="text-muted">${skill.evidence && skill.evidence.length ? `${skill.evidence.length} stored evidence record${skill.evidence.length === 1 ? '' : 's'}` : 'Self declared; no verified evidence yet.'}</small></div>`).join('') : '<p class="text-muted mb-0">No verified skill evidence yet.</p><a href="student-profile.html" class="btn btn-sm btn-outline-primary mt-3 me-2">Add Skill</a><a href="skill-assessment.html" class="btn btn-sm btn-outline-info mt-3">Take Assessment</a>';
+
+            const levelCounts = skills.reduce((counts, skill) => { const level = skill.level || 'unassessed'; counts[level] = (counts[level] || 0) + 1; return counts; }, {});
+            const labels = Object.keys(levelCounts);
+            const chart = document.getElementById('skillChart');
+            if (!skills.length) {
+                chart.replaceWith(Object.assign(document.createElement('p'), { className: 'text-muted', textContent: 'No stored skills to visualize.' }));
+                return;
+            }
+            new Chart(chart.getContext('2d'), { type: 'doughnut', data: { labels, datasets: [{ data: labels.map(label => levelCounts[label]), backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
         }
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+        function logout() { logoutUser(); }
+
+        loadSkillTwin();
     </script>
 </body>
 </html>

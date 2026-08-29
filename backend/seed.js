@@ -5,6 +5,7 @@
 
 const mongoose = require('mongoose');
 const { Assessment } = require('./models/Assessment');
+const AssessmentQuestion = require('./models/AssessmentQuestion');
 const CareerRole = require('./models/CareerRole');
 require('dotenv').config();
 
@@ -15,6 +16,7 @@ const seedDatabase = async () => {
 
     // Clear existing data
     await Assessment.deleteMany({});
+    await AssessmentQuestion.deleteMany({});
     await CareerRole.deleteMany({});
 
     // ============ ASSESSMENTS ============
@@ -215,6 +217,21 @@ const seedDatabase = async () => {
     ];
 
     await Assessment.insertMany(assessments);
+    const questionBank = assessments.flatMap(assessment => assessment.questions.map(question => ({
+      skill: question.skillTested,
+      topic: assessment.title,
+      difficulty: assessment.difficulty === 'advanced' ? 'hard' : assessment.difficulty === 'beginner' ? 'easy' : 'medium',
+      questionText: question.questionText,
+      questionType: 'mcq',
+      options: question.options,
+      correctAnswer: question.correctAnswer,
+      explanation: question.explanation,
+      sourceType: 'curated',
+      sourceReference: 'ISOTOPES seed question bank',
+      verificationStatus: 'verified',
+      active: true
+    })).filter(question => question.skill && question.options.length >= 2));
+    await AssessmentQuestion.insertMany(questionBank);
     console.log('✅ Assessments seeded');
 
     // ============ CAREER ROLES ============

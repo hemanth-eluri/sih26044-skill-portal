@@ -5,6 +5,10 @@
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
+function escapeHtml(value = '') {
+    return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+}
+
 function getApiErrorMessage(error, fallback) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
         return 'Cannot reach the backend. Start MongoDB, then run the backend on port 5000.';
@@ -276,7 +280,7 @@ async function fetchCurrentUser() {
  */
 async function fetchStudentProfile() {
     try {
-        const response = await fetch(`${API_BASE_URL}/students/profile`, {
+        const response = await fetch(`${API_BASE_URL}/students/me`, {
             headers: getAuthHeaders()
         });
 
@@ -298,7 +302,7 @@ async function fetchStudentProfile() {
  */
 async function updateStudentProfile(profileData) {
     try {
-        const response = await fetch(`${API_BASE_URL}/students/profile`, {
+        const response = await fetch(`${API_BASE_URL}/students/me/profile`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(profileData)
@@ -478,6 +482,102 @@ async function submitAssessment(assessmentId, answers, timeSpent) {
     }
 }
 
+async function generateAssessment(skills) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assessments/generate`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ skills })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Assessment generation failed');
+        return { success: true, assessment: data.assessment };
+    } catch (error) {
+        console.error('Generate assessment error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchMyAssessmentResults() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assessments/results/me`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch assessment results');
+        return { success: true, results: data.results };
+    } catch (error) {
+        console.error('Fetch assessment results error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchSkillCatalog() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/skills`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch skill catalog');
+        return { success: true, skills: data.skills || [] };
+    } catch (error) {
+        console.error('Fetch skill catalog error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function createAssessmentSession(mode, skills = [], questionCount = 10) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assessments/session`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ mode, skills, questionCount })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to start assessment');
+        return { success: true, session: data.session };
+    } catch (error) {
+        console.error('Create assessment session error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function submitAssessmentSession(sessionId, answers) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assessments/session/${sessionId}/submit`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ answers })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to submit assessment');
+        return { success: true, result: data.result };
+    } catch (error) {
+        console.error('Submit assessment session error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchAssessmentHistory() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/assessments/history`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch assessment history');
+        return { success: true, results: data.results || [] };
+    } catch (error) {
+        console.error('Fetch assessment history error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchSkillAnalysis() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/students/me/skill-analysis`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch skill analysis');
+        return { success: true, analysis: data.analysis };
+    } catch (error) {
+        console.error('Fetch skill analysis error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // ============================================
 // API Functions - Career Roles
 // ============================================
@@ -548,6 +648,10 @@ async function selectCareerRole(roleId) {
  */
 function calculateSkillGap(studentSkills, roleRequiredSkills) {
     const studentSkillNames = studentSkills.map(s => s.name.toLowerCase());
+
+    if (roleRequiredSkills.length === 0) {
+        return { matchPercentage: 100, matched: [], missing: [], strong: [], weak: [] };
+    }
     
     const matched = [];
     const missing = [];
@@ -887,6 +991,8 @@ if (typeof module !== 'undefined' && module.exports) {
         addExperience,
         addProject,
         addCertification,
+        generateAssessment,
+        fetchMyAssessmentResults,
         deleteEducation,
         deleteExperience,
         deleteProject,

@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "dev:memory-db": "node scripts/startMemoryDatabase.js",
     "seed": "node seed.js",
+    "dev:list-users": "node scripts/listUsers.js",
+    "dev:reset-user": "node scripts/resetUser.js",
     "test": "jest --detectOpenHandles --forceExit",
     "test:unit": "jest __tests__/unit --detectOpenHandles --forceExit",
     "test:api": "jest __tests__/api --detectOpenHandles --forceExit",
