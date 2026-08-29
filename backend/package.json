@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "dev:memory-db": "node scripts/startMemoryDatabase.js",
     "seed": "node seed.js",
+    "sync:hackathons": "node scripts/syncHackathons.js",
     "dev:list-users": "node scripts/listUsers.js",
     "dev:reset-user": "node scripts/resetUser.js",
     "test": "jest --detectOpenHandles --forceExit",

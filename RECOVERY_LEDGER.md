@@ -31,9 +31,9 @@ The backend and MongoDB are the source of truth. Do not use hardcoded user IDs, 
 
 ## Active Task
 
-**Phase 1 — Database and backend assessment foundation**
+**Hackathon Discovery — Phase 1: reliable source-to-database backend**
 
-Audit existing models/routes, define compatible question/session/result structures, then implement secure per-user assessment generation, submission, history, skill analysis, and deterministic recommendations.
+Implement one genuine structured hackathon source end-to-end: verify the provider contract, normalize and validate records, conservatively deduplicate/upsert MongoDB, expose paginated APIs, calculate explainable per-student recommendations, and persist student tracking activity before adding the frontend.
 
 ## Requirement Checklist
 
@@ -54,6 +54,70 @@ Audit existing models/routes, define compatible question/session/result structur
 - [ ] Conflicting project documentation corrected
 
 ## Change Log
+
+### 2026-08-30 — Hackathon Discovery approved and initialized
+
+- Completed the required read-only inspection of Student/User models, skills/career-role architecture, authentication, server routes, opportunity matching, frontend navigation/API helpers, and test infrastructure.
+- Selected Hackalendar's documented public structured API as the first proposed provider; no Devpost/Unstop/MLH scraping will be attempted.
+- Planned new models: `Hackathon`, `HackathonActivity`, and `HackathonSyncRun`.
+- Planned services: provider adapter, normalizer, URL validator, conservative deduplicator/upsert, aggregator, and deterministic matcher.
+- Exact next step: perform a real provider request and record the current response contract before implementing persistence.
+
+### 2026-08-30 — Hackalendar contract verified and persistence foundation added
+
+- Performed a real HTTPS request to `https://hackalendar.com/api/events?limit=3`; received HTTP 200 JSON with stable IDs, URLs, names, descriptions, dates, modes, themes, registration URLs, organizer, free flag, and verification timestamp. Null deadlines/prizes were observed and remain null.
+- Added `Hackathon`, `HackathonActivity`, and `HackathonSyncRun` models with ownership/deduplication constraints and focused indexes.
+- Added safe HTTP(S) URL validation, text sanitization, observed-field normalization, deterministic status calculation, and conservative canonical keys.
+- Added a provider interface and a Hackalendar structured-API provider with explicit user agent and 12-second timeout.
+- Aggregation/upsert, matcher, routes, and tests remain pending.
+
+### 2026-08-30 — Hackathon sync, matching, and API layer
+
+- Added source-isolated aggregation that records sync runs, continues after record/provider failures, normalizes/upserts by conservative canonical key, and marks records stale after 72 hours.
+- Added deterministic recommendation logic separating relevance, eligibility, missing requirements, and learning opportunities.
+- Added paginated/filterable public listing/detail APIs and authenticated recommendation, save/remove, self-reported status, and My Hackathons APIs.
+- Added protected institution-only sync; an optional server-side `HACKATHON_SYNC_SECRET` adds a second gate.
+- Registered `/api/hackathons` without changing existing opportunity routes.
+- Unit/API verification remains pending; no frontend files changed in this step.
+
+### 2026-08-30 — Hackathon backend tests added
+
+- Added unit coverage for safe URL handling, sanitization, null preservation, status derivation, eligibility, relevance, explanations, and learning opportunities.
+- Added API/service coverage for provider-shaped synchronization, repeat-sync deduplication/update, filtering/pagination, Student A/B recommendation differences, saved activity, self-reported registration, and user isolation.
+- Test execution remains pending.
+
+### 2026-08-30 — Hackathon backend verified and frontend client prepared
+
+- Focused verification passed: **16 tests passed, 0 failed** across hackathon unit/API tests and existing profile persistence tests; syntax and diff checks passed.
+- Renamed the sync audit error array to `syncErrors` to avoid a Mongoose reserved-path warning.
+- Added `npm run sync:hackathons` for controlled development/operator synchronization outside the student UI.
+- Added authenticated frontend clients for recommendations, detail, save/remove, status updates, and My Hackathons.
+- Added `hackathons.html` to the protected-page list; page implementation remains pending.
+
+### 2026-08-30 — Hackathon Discovery frontend added
+
+- Added `frontend/hackathons.html` in the existing Bootstrap visual style with loading/empty/error states, search, mode/status/domain/free/eligibility filters, backend pagination, explainable recommendations, genuine source attribution, last-checked timestamps, details modal, and My Hackathons.
+- Added `frontend/js/hackathons-page.js` with escaped text rendering and independent HTTP(S) verification for official links.
+- Opening an official registration page does not alter activity state; `I Registered` is a separate explicit `Self Reported` action.
+- Missing source fields display `Not specified by source` rather than fabricated values.
+- Static verification, navigation updates, real synchronization, and live restart remain pending.
+
+### 2026-08-30 — Hackathons navigation added
+
+- Added the Hackathons link to the student dashboard, profile, assessment, opportunities, and applications navigation bars.
+- No existing page or navigation target was removed.
+- Static verification and live synchronization remain pending.
+
+### 2026-08-30 — Real Hackalendar synchronization and live verification
+
+- First real sync: **20 fetched, 20 inserted, 0 updated, 0 skipped, 0 errors**.
+- Mandatory repeat sync: **20 fetched, 0 inserted, 20 updated, 0 skipped, 0 errors**, confirming events update instead of duplicating.
+- Restarted the live backend with Hackathon routes enabled.
+- Verified HTTP 200 for the backend health endpoint and `frontend/hackathons.html`.
+- Verified the live listing contains 20 MongoDB records with `Hackalendar` source names and traceable source URLs.
+- Registered a live student with B.Tech/CSE/year 2, AI/ML and Web Development interests, and Java/SQL skills; the recommendation API returned real stored events with an explanation including `Matches your AI/ML interest`.
+- Registration links are rendered only after independent HTTP(S) validation, use `target="_blank" rel="noopener noreferrer"`, and never change activity status. Self-reported registration remains a separate explicit action.
+- Focused tests remain **16 passed, 0 failed**. The pre-existing unrelated legacy-suite failures remain tracked separately.
 
 ### 2026-08-30 — Recovery initialized
 

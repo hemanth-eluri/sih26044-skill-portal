@@ -578,6 +578,66 @@ async function fetchSkillAnalysis() {
     }
 }
 
+async function fetchRecommendedHackathons(params = {}) {
+    try {
+        const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== '' && value !== undefined));
+        const response = await fetch(`${API_BASE_URL}/hackathons/recommended?${query}`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch hackathons');
+        return { success: true, recommendations: data.recommendations || [], pagination: data.pagination };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchHackathon(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathons/${id}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch hackathon');
+        return { success: true, hackathon: data.hackathon };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function updateHackathonActivity(id, status) {
+    try {
+        const isSave = status === 'saved';
+        const response = await fetch(`${API_BASE_URL}/hackathons/${id}/${isSave ? 'save' : 'status'}`, {
+            method: 'POST', headers: getAuthHeaders(), body: isSave ? undefined : JSON.stringify({ status })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to update hackathon');
+        return { success: true, activity: data.activity, selfReported: data.selfReported };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function removeSavedHackathon(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathons/${id}/save`, { method: 'DELETE', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to remove saved hackathon');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchMyHackathons(status = '') {
+    try {
+        const query = status ? `?status=${encodeURIComponent(status)}` : '';
+        const response = await fetch(`${API_BASE_URL}/students/me/hackathons${query}`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch saved hackathons');
+        return { success: true, activities: data.activities || [] };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
 // ============================================
 // API Functions - Career Roles
 // ============================================
@@ -838,7 +898,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Check authentication status
  */
 function checkAuthStatus() {
-    const protectedPages = ['student-dashboard.html', 'student-profile.html', 'skill-assessment.html', 'skill-display.html'];
+    const protectedPages = ['student-dashboard.html', 'student-profile.html', 'skill-assessment.html', 'skill-display.html', 'skill-gap-analysis.html', 'opportunities.html', 'applications.html', 'hackathons.html'];
     const currentPage = window.location.pathname.split('/').pop();
     
     if (protectedPages.includes(currentPage) && !isUserLoggedIn()) {

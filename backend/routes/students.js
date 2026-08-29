@@ -4,6 +4,7 @@ const Student = require('../models/Student');
 const User = require('../models/User');
 const CareerRole = require('../models/CareerRole');
 const { AssessmentResult } = require('../models/Assessment');
+const HackathonActivity = require('../models/HackathonActivity');
 const { auth, authorize } = require('../middleware/auth');
 
 async function getAuthenticatedStudent(userId) {
@@ -166,6 +167,19 @@ router.get('/me/skill-analysis', auth, authorize('student'), async (req, res) =>
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to analyze skills: ' + err.message });
+  }
+});
+
+router.get('/me/hackathons', auth, authorize('student'), async (req, res) => {
+  try {
+    const student = await Student.findOne({ userId: req.user.userId });
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+    const filter = { studentId: student._id };
+    if (req.query.status) filter.status = req.query.status;
+    const activities = await HackathonActivity.find(filter).populate('hackathonId').sort({ updatedAt: -1 });
+    res.json({ success: true, activities });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch your hackathons: ' + err.message });
   }
 });
 
