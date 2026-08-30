@@ -3,7 +3,11 @@
  * Handles authentication, navigation, and API calls
  */
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5000/api'
+        : 'https://YOUR-RENDER-BACKEND.onrender.com/api';
 
 function escapeHtml(value = '') {
     return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
