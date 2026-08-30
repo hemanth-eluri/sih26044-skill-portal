@@ -1,5 +1,6 @@
 const normalize = value => String(value || '').trim().toLowerCase();
 const unique = values => [...new Set(values.filter(Boolean))];
+const { reason } = require('../explanations/reasonBuilder');
 
 function includesLoose(values, candidate) {
   const wanted = normalize(candidate);
@@ -63,7 +64,8 @@ function matchHackathon(student, hackathon, now = new Date()) {
     matchedReasons: reasons,
     learningOpportunities: learning,
     missingRequirements: eligibility.missingRequirements,
-    eligibilityStatus: eligibility.status
+    eligibilityStatus: eligibility.status,
+    reasons: reasons.map(text => reason(text.includes('eligibility') ? 'ELIGIBILITY' : text.includes('career goal') ? 'TARGET_ROLE' : text.includes('profile') ? 'PROFILE' : 'HACKATHON_SOURCE', text))
   };
 }
 

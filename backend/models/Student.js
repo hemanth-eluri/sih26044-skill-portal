@@ -21,6 +21,13 @@ const StudentSchema = new mongoose.Schema({
   fieldsOfInterest: [String],
   industriesOfInterest: [String],
   preferredRoles: [String],
+  targetCompanyGoal: {
+    enabled: { type: Boolean, default: false },
+    companyName: { type: String, trim: true },
+    normalizedCompanyName: { type: String, trim: true },
+    role: { type: String, trim: true },
+    updatedAt: Date
+  },
   primaryTargetRole: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'CareerRole'

@@ -3,6 +3,18 @@
    ============================================ */
 
 :root {
+    --primary: #1746a2;
+    --primary-dark: #102f6b;
+    --secondary: #087f8c;
+    --background: #f5f7fb;
+    --surface: #ffffff;
+    --surface-muted: #eef2f7;
+    --text-primary: #172033;
+    --text-secondary: #667085;
+    --border: #dfe5ee;
+    --success: #17864b;
+    --warning: #b7791f;
+    --danger: #c9362b;
     --primary-color: #0066cc;
     --secondary-color: #00a8e8;
     --success-color: #28a745;
@@ -11,6 +23,47 @@
     --light-bg: #f8f9fa;
     --text-muted: #6c757d;
     --border-light: #e9ecef;
+}
+
+.has-app-shell { background: var(--background); color: var(--text-primary); padding-left: 252px; padding-top: 68px; min-height: 100vh; }
+.app-sidebar { position: fixed; inset: 0 auto 0 0; width: 252px; z-index: 1040; display: flex; flex-direction: column; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 14px; }
+.app-brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px 22px; color: var(--text-primary); text-decoration: none; }
+.app-brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: var(--primary); color: white; font-weight: 800; }
+.app-brand small { display: block; color: var(--text-secondary); font-size: .72rem; font-weight: 500; }
+.app-nav { overflow-y: auto; flex: 1; }
+.app-nav-group { margin-bottom: 20px; }
+.app-nav-label { padding: 0 12px 7px; color: #8992a3; font-size: .68rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.app-nav-link { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; margin: 2px 0; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); text-decoration: none; font-size: .92rem; text-align: left; }
+.app-nav-link i { width: 18px; text-align: center; }
+.app-nav-link:hover { background: var(--surface-muted); color: var(--primary); }
+.app-nav-link.active { background: #edf3ff; color: var(--primary); font-weight: 650; box-shadow: inset 3px 0 var(--primary); }
+.app-logout { border-top: 1px solid var(--border); border-radius: 0; padding-top: 15px; }
+.app-header { position: fixed; top: 0; right: 0; left: 252px; height: 68px; z-index: 1030; display: flex; align-items: center; gap: 14px; padding: 0 28px; background: rgba(255,255,255,.96); border-bottom: 1px solid var(--border); }
+.app-header-eyebrow { color: var(--text-secondary); font-size: .68rem; letter-spacing: .08em; }
+.app-profile-link { margin-left: auto; color: var(--primary); font-size: 1.65rem; }
+.app-menu-button { display: none; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; width: 40px; height: 40px; color: var(--text-primary); }
+.has-app-shell main, .has-app-shell > .container-fluid { max-width: 1440px; margin-inline: auto; }
+.has-app-shell .card { border: 1px solid var(--border) !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,.06) !important; }
+.has-app-shell .btn { border-radius: 8px; font-weight: 600; }
+.has-app-shell .btn-primary { background: var(--primary); border-color: var(--primary); }
+.has-app-shell .form-control, .has-app-shell .form-select { min-height: 44px; border-color: var(--border); border-radius: 8px; }
+.has-app-shell .form-control:focus, .has-app-shell .form-select:focus, .app-nav-link:focus-visible, .app-menu-button:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23,70,162,.16); outline: 0; }
+
+@media (max-width: 991.98px) {
+    .has-app-shell { padding-left: 0; }
+    .app-sidebar { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 8px 0 24px rgba(16,24,40,.12); }
+    .app-nav-open .app-sidebar { transform: translateX(0); }
+    .app-header { left: 0; padding-inline: 16px; }
+    .app-menu-button { display: inline-grid; place-items: center; }
+}
+
+.participation-card {
+    border-left: 4px solid var(--primary-color, #0066cc) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.participation-card:hover {
+    transform: translateY(-2px);
 }
 
 /* ============================================

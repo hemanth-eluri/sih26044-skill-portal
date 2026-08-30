@@ -51,8 +51,8 @@
     <div class="container py-5">
         <div class="row mb-5">
             <div class="col-12">
-                <h2 class="fw-bold mb-2">Your Skill Twin</h2>
-                <p class="text-muted">Evidence-based digital representation of your demonstrated capabilities</p>
+                <h2 class="fw-bold mb-2">Your Skill Passport</h2>
+                <p class="text-muted">A source-by-source record of your saved skill evidence. It does not claim employer or overall verification.</p>
             </div>
         </div>
 
@@ -160,24 +160,23 @@
                 window.location.href = 'login.html';
                 return;
             }
-            const result = await fetchStudentProfile();
+            const result = await fetchSkillPassport();
             if (!result.success) {
                 document.getElementById('skillsBreakdown').innerHTML = `<p class="text-danger">${result.error || 'Unable to load your skills.'}</p>`;
                 return;
             }
 
-            const student = result.student || {};
-            const skills = student.skills || [];
-            const assessments = student.assessmentResults || [];
+            const passport = result.passport || {};
+            const skills = passport.skills || [];
             document.getElementById('skillsIdentified').textContent = skills.length;
-            document.getElementById('assessmentsTaken').textContent = assessments.length;
+            document.getElementById('assessmentsTaken').textContent = passport.summary?.assessmentsCompleted || 0;
             document.getElementById('overallScore').textContent = 'Not calculated';
-            document.getElementById('profileStatus').textContent = skills.length ? 'Stored evidence' : 'No evidence';
+            document.getElementById('profileStatus').textContent = passport.summary?.evidenceBackedSkills ? `${passport.summary.evidenceBackedSkills} evidence-backed` : 'No evidence';
 
             const breakdown = document.getElementById('skillsBreakdown');
-            breakdown.innerHTML = skills.length ? skills.map(skill => `<div class="skill-section mb-4 pb-4 border-bottom"><div class="d-flex justify-content-between align-items-center mb-2"><h6 class="mb-0">${escapeHtml(skill.name)}</h6><span class="badge bg-secondary">${escapeHtml(skill.level || 'Not assessed')}</span></div><small class="text-muted">${skill.evidence && skill.evidence.length ? `${skill.evidence.length} stored evidence record${skill.evidence.length === 1 ? '' : 's'}` : 'Self declared; no verified evidence yet.'}</small></div>`).join('') : '<p class="text-muted mb-0">No verified skill evidence yet.</p><a href="student-profile.html" class="btn btn-sm btn-outline-primary mt-3 me-2">Add Skill</a><a href="skill-assessment.html" class="btn btn-sm btn-outline-info mt-3">Take Assessment</a>';
+            breakdown.innerHTML = skills.length ? skills.map(skill => `<article class="skill-section mb-4 pb-4 border-bottom"><div class="d-flex flex-wrap justify-content-between gap-2 mb-3"><div><h5 class="mb-1">${escapeHtml(skill.name)}</h5><span class="badge text-bg-light border">Self declared: ${escapeHtml(skill.selfDeclaredLevel || 'Not specified')}</span></div><div class="text-end"><strong>${skill.assessment.latestScore === null ? 'No assessment evidence' : `${skill.assessment.latestScore}%`}</strong><div class="small text-muted">${skill.assessment.attempts} assessment attempt(s)</div></div></div><div class="row g-2 small"><div class="col-6 col-md-3"><div class="p-2 bg-light rounded">Projects<br><strong>${skill.evidence.projects}</strong></div></div><div class="col-6 col-md-3"><div class="p-2 bg-light rounded">Certifications<br><strong>${skill.evidence.certifications}</strong></div></div><div class="col-6 col-md-3"><div class="p-2 bg-light rounded">Internships<br><strong>${skill.evidence.internships}</strong></div></div><div class="col-6 col-md-3"><div class="p-2 bg-light rounded">External / Challenge<br><strong>Not connected</strong></div></div></div><div class="small text-muted mt-3">Last evidence: ${skill.lastEvidenceDate ? formatDate(skill.lastEvidenceDate) : 'No dated evidence yet'}</div></article>`).join('') : '<div class="py-4 text-center"><h5>You haven’t added any skills yet.</h5><p class="text-muted">Add skills to start building your evidence passport.</p><a href="student-profile.html" class="btn btn-primary">Add Skills</a></div>';
 
-            const levelCounts = skills.reduce((counts, skill) => { const level = skill.level || 'unassessed'; counts[level] = (counts[level] || 0) + 1; return counts; }, {});
+            const levelCounts = skills.reduce((counts, skill) => { const level = skill.assessedLevel || skill.selfDeclaredLevel || 'unassessed'; counts[level] = (counts[level] || 0) + 1; return counts; }, {});
             const labels = Object.keys(levelCounts);
             const chart = document.getElementById('skillChart');
             if (!skills.length) {

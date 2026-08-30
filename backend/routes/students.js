@@ -5,6 +5,11 @@ const User = require('../models/User');
 const CareerRole = require('../models/CareerRole');
 const { AssessmentResult } = require('../models/Assessment');
 const HackathonActivity = require('../models/HackathonActivity');
+const { normalizeLabel } = require('../services/jobSources/jobNormalizer');
+const { reason } = require('../services/explanations/reasonBuilder');
+const CareerRoadmap = require('../models/CareerRoadmap');
+const JobPosting = require('../models/JobPosting');
+const { buildRoadmapTasks } = require('../services/careerRoadmap/roadmapBuilder');
 const { auth, authorize } = require('../middleware/auth');
 
 async function getAuthenticatedStudent(userId) {
@@ -114,6 +119,34 @@ async function saveProfile(req, res) {
 router.get('/me', auth, authorize('student'), readProfile);
 router.put('/me/profile', auth, authorize('student'), saveProfile);
 
+router.get('/me/company-goal', auth, authorize('student'), async (req, res) => {
+  const student = await Student.findOne({ userId: req.user.userId }).select('targetCompanyGoal');
+  if (!student) return res.status(404).json({ error: 'Student profile not found' });
+  res.json({ success: true, goal: student.targetCompanyGoal?.enabled ? student.targetCompanyGoal : null });
+});
+
+router.put('/me/company-goal', auth, authorize('student'), async (req, res) => {
+  try {
+    const companyName = typeof req.body.companyName === 'string' ? req.body.companyName.trim() : '';
+    const role = typeof req.body.role === 'string' ? req.body.role.trim() : '';
+    if (!companyName || companyName.length > 200 || !role || role.length > 200) {
+      return res.status(400).json({ error: 'Company name and target role are required and must be under 200 characters' });
+    }
+    const goal = { enabled: true, companyName, normalizedCompanyName: normalizeLabel(companyName), role, updatedAt: new Date() };
+    const student = await Student.findOneAndUpdate({ userId: req.user.userId }, { $set: { targetCompanyGoal: goal, updatedAt: new Date() } }, { new: true, runValidators: true });
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+    res.json({ success: true, goal: student.targetCompanyGoal });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to save target company: ${err.message}` });
+  }
+});
+
+router.delete('/me/company-goal', auth, authorize('student'), async (req, res) => {
+  const student = await Student.findOneAndUpdate({ userId: req.user.userId }, { $unset: { targetCompanyGoal: 1 }, $set: { updatedAt: new Date() } }, { new: true });
+  if (!student) return res.status(404).json({ error: 'Student profile not found' });
+  res.json({ success: true });
+});
+
 router.get('/me/skill-analysis', auth, authorize('student'), async (req, res) => {
   try {
     const student = await Student.findOne({ userId: req.user.userId }).populate('targetRole');
@@ -148,6 +181,7 @@ router.get('/me/skill-analysis', auth, authorize('student'), async (req, res) =>
       const target = student.targetRole ? ` for your ${student.targetRole.title} goal` : '';
       return {
         skill: item.skill,
+        reasons: [reason(item.score === null ? 'TARGET_ROLE' : 'ASSESSMENT', item.reason, item.score === null ? 'gap' : 'priority')],
         message: item.score === null
           ? `Build evidence in ${item.skill}${target}; no verified assessment evidence is available yet.`
           : `Prioritize ${item.skill}${target} because your latest verified assessment score is ${item.score}%.`
@@ -167,6 +201,111 @@ router.get('/me/skill-analysis', auth, authorize('student'), async (req, res) =>
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to analyze skills: ' + err.message });
+  }
+});
+
+router.get('/me/skill-passport', auth, authorize('student'), async (req, res) => {
+  try {
+    const student = await Student.findOne({ userId: req.user.userId });
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+    const results = await AssessmentResult.find({ studentId: student._id }).sort({ completedAt: -1 });
+    const assessmentBySkill = new Map();
+    for (const result of results) for (const item of result.skillScores || []) {
+      const key = item.skill.toLowerCase();
+      const current = assessmentBySkill.get(key) || { attempts: 0, latestScore: null, bestScore: null, lastEvidenceDate: null };
+      current.attempts += 1;
+      if (current.latestScore === null) { current.latestScore = item.score; current.lastEvidenceDate = result.completedAt; }
+      current.bestScore = current.bestScore === null ? item.score : Math.max(current.bestScore, item.score);
+      assessmentBySkill.set(key, current);
+    }
+    const passportSkills = student.skills.map(skill => {
+      const key = skill.name.toLowerCase();
+      const explicitEvidence = skill.evidence || [];
+      const projects = (student.projects || []).filter(project => (project.skills || []).some(name => name.toLowerCase() === key));
+      const certifications = (student.certifications || []).filter(item => item.name?.toLowerCase() === key);
+      const datedEvidence = [
+        ...explicitEvidence.map(item => item.date),
+        ...projects.flatMap(item => [item.endDate, item.startDate]),
+        ...certifications.map(item => item.issueDate),
+        assessmentBySkill.get(key)?.lastEvidenceDate
+      ].filter(Boolean).map(value => new Date(value)).filter(value => !Number.isNaN(value.getTime()));
+      const lastEvidenceDate = datedEvidence.length ? new Date(Math.max(...datedEvidence.map(value => value.getTime()))) : null;
+      return {
+        name: skill.name,
+        selfDeclaredLevel: skill.selfDeclaredLevel,
+        assessedLevel: skill.level,
+        assessment: assessmentBySkill.get(key) || { attempts: 0, latestScore: null, bestScore: null, lastEvidenceDate: null },
+        evidence: {
+          projects: projects.length,
+          certifications: certifications.length,
+          internships: explicitEvidence.filter(item => item.type === 'internship').length,
+          externalPlatforms: 0,
+          employerChallenges: 0
+        },
+        lastEvidenceDate,
+        evidenceLabels: [...new Set(explicitEvidence.map(item => item.type))],
+        limitations: ['External platform evidence is not connected.', 'Employer challenge evidence is not available.']
+      };
+    });
+    res.json({
+      success: true,
+      passport: {
+        studentId: student._id,
+        generatedAt: new Date(),
+        skills: passportSkills,
+        summary: { totalSkills: passportSkills.length, evidenceBackedSkills: passportSkills.filter(skill => skill.lastEvidenceDate).length, assessmentsCompleted: results.length },
+        shareable: false,
+        message: passportSkills.length ? 'Evidence is reported by source type; no overall verification claim is made.' : 'No skills are saved yet.'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to build skill passport: ${err.message}` });
+  }
+});
+
+router.get('/me/career-roadmap', auth, authorize('student'), async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req.user.userId);
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+    const goal = student.targetCompanyGoal?.enabled ? student.targetCompanyGoal : null;
+    const postings = goal ? await JobPosting.find({ active: true, normalizedCompanyName: new RegExp(`^${goal.normalizedCompanyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'), ...(goal.role ? { normalizedRole: new RegExp(goal.role.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') } : {}) }).limit(100) : [];
+    const generated = buildRoadmapTasks(student, postings);
+    const existing = await CareerRoadmap.findOne({ studentId: student._id });
+    const progress = new Map((existing?.tasks || []).map(item => [item.key, { status: item.status, completedAt: item.completedAt }]));
+    const tasks = generated.map(item => ({ ...item, ...(progress.get(item.key) || {}) }));
+    const roadmap = await CareerRoadmap.findOneAndUpdate(
+      { studentId: student._id },
+      { $set: { targetRoleId: student.targetRole?._id || student.primaryTargetRole?._id, targetRoleTitle: student.targetRole?.title || student.primaryTargetRole?.title, targetCompanyName: goal?.companyName, tasks, generatedAt: new Date() }, $setOnInsert: { targetDate: null } },
+      { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+    );
+    res.json({ success: true, roadmap, context: { companyPostingsAnalyzed: postings.length }, message: tasks[0]?.key === 'select-role' ? 'Choose a target role to unlock a gap-specific roadmap.' : null });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to build career roadmap: ${err.message}` });
+  }
+});
+
+router.put('/me/career-roadmap/settings', auth, authorize('student'), async (req, res) => {
+  const student = await Student.findOne({ userId: req.user.userId });
+  if (!student) return res.status(404).json({ error: 'Student profile not found' });
+  const targetDate = req.body.targetDate ? new Date(req.body.targetDate) : null;
+  if (targetDate && (Number.isNaN(targetDate.getTime()) || targetDate <= new Date())) return res.status(400).json({ error: 'Target date must be a valid future date' });
+  const roadmap = await CareerRoadmap.findOneAndUpdate({ studentId: student._id }, { $set: { targetDate } }, { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true });
+  res.json({ success: true, roadmap });
+});
+
+router.patch('/me/career-roadmap/tasks/:taskId', auth, authorize('student'), async (req, res) => {
+  try {
+    const allowed = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'];
+    if (!allowed.includes(req.body.status)) return res.status(400).json({ error: 'Invalid roadmap task status' });
+    const student = await Student.findOne({ userId: req.user.userId });
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+    const roadmap = await CareerRoadmap.findOne({ studentId: student._id, 'tasks._id': req.params.taskId });
+    if (!roadmap) return res.status(404).json({ error: 'Roadmap task not found' });
+    const task = roadmap.tasks.id(req.params.taskId); task.status = req.body.status; task.completedAt = req.body.status === 'COMPLETED' ? new Date() : null;
+    await roadmap.save();
+    res.json({ success: true, task });
+  } catch (err) {
+    res.status(500).json({ error: `Failed to update roadmap task: ${err.message}` });
   }
 });
 

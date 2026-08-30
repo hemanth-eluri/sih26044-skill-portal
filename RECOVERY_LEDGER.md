@@ -31,9 +31,9 @@ The backend and MongoDB are the source of truth. Do not use hardcoded user IDs, 
 
 ## Active Task
 
-**Hackathon Discovery — Phase 1: reliable source-to-database backend**
+**Real Company Requirement & Target Company Engine — Phase 1 proof completed**
 
-Implement one genuine structured hackathon source end-to-end: verify the provider contract, normalize and validate records, conservatively deduplicate/upsert MongoDB, expose paginated APIs, calculate explainable per-student recommendations, and persist student tracking activity before adding the frontend.
+One genuine structured job source now works end-to-end through normalization, MongoDB persistence, deduplication, source-attributed APIs, and explainable student comparison. The next phase is employer-opportunity integration, target-company persistence, requirement aggregation, activity tracking, and frontend delivery.
 
 ## Requirement Checklist
 
@@ -54,6 +54,120 @@ Implement one genuine structured hackathon source end-to-end: verify the provide
 - [ ] Conflicting project documentation corrected
 
 ## Change Log
+
+### 2026-08-30 — Sprint 1 Career Roadmap foundation
+
+- Added one `CareerRoadmap` model keyed uniquely to Student, with target context and persisted task states `NOT_STARTED`, `IN_PROGRESS`, and `COMPLETED`.
+- Added a deterministic builder using the selected CareerRole, saved skill evidence, optional target company, and genuine stored company postings.
+- Tasks retain their source and supporting evidence text; no generic AI roadmap or fake target-company requirement is generated.
+- Routes, tests, and UI remain pending.
+- Added authenticated roadmap generation/reload, target-date settings, and owned task-progress endpoints.
+- Regeneration merges statuses by stable task key, preserving student-controlled completion rather than resetting progress.
+- Added gap-derived generation, progress reload, Student A/B isolation, empty-goal, and target-date validation tests. Execution and UI remain pending.
+- Initial run passed 17/18; the single failure was a test typo expecting singular `rest api` while the deterministic normalized key correctly retained `rest apis`. The test expectation was corrected without changing application behavior.
+- Final verification passed: **18 tests passed, 0 failed** across roadmap, profile, assessment, and Skill Passport suites.
+- Added the protected Career Roadmap page with loading/empty/error/success states, optional target-date persistence, source/evidence explanations, and live task-status controls.
+- Added navigation only after the workflow and persistence tests passed. Static and live verification remain pending.
+- Static inspection found the authentication list included the page but the shell-rendering list initially did not; corrected the shell list before live testing.
+
+### 2026-08-30 — Sprint 1 structured explanations
+
+- Added a shared explanation reason builder with controlled sources and `{ source, evidence, effect }` output.
+- Job comparisons, target-company/role boosts, hackathon recommendations, and skill-analysis recommendations now expose structured reasons without changing scores or removing legacy explanation fields.
+- Added reusable “Why am I seeing this?” disclosures to Jobs for Me and Hackathons using the structured reason data.
+- Preserved the legacy job `reasons` string array and added `structuredReasons` alongside it for backward compatibility.
+- Verification passed: **22 tests passed, 0 failed** across jobs, hackathons, assessments, Skill Passport, and hackathon matcher suites. Backend/frontend syntax and patch-integrity checks passed.
+- Restarted the live backend. Verified legacy Goodlord job reason remains a string while its structured counterpart reports `TARGET_COMPANY`; job comparison reports `PROFILE`, and hackathon reasoning reports `HACKATHON_SOURCE`.
+- Verified `jobs-for-me.html` and `hackathons.html` return HTTP 200 with the new disclosure markup.
+- Structured explanation slice is complete. Next: implement a persisted Career Roadmap derived from actual target-role/company gaps with user-controlled task progress.
+
+### 2026-08-30 — Sprint 1 Skill Passport backend
+
+- Added authenticated `GET /api/students/me/skill-passport`, reusing Student, projects, certifications, skill evidence, and AssessmentResult without introducing a duplicate skill model.
+- The passport separates self-declared level, assessment attempts/latest/best score, confirmed project tags, exact-name certification evidence, internship evidence, and last evidence date.
+- External-platform and employer-challenge evidence explicitly return zero/unavailable; sharing remains disabled until a consent-safe workflow exists.
+- Added Student A/B isolation, empty-student, explicit-evidence, and reload-persistence tests. Execution and UI integration remain pending.
+- Verification passed: **15 tests passed, 0 failed** across Skill Passport, assessment-session, and profile-persistence suites.
+- Extended the existing Skill Twin page into the Skill Passport UI using the new endpoint while preserving all existing element IDs. It shows self-declared level, latest assessment score/attempts, explicit project/certification/internship counts, last evidence date, and unavailable external/challenge evidence without fake verification claims.
+- Static JavaScript and patch-integrity checks passed. Restarted the live backend with the passport endpoint.
+- Live persistence journey passed: registered a student, saved Java/Intermediate, loaded the authenticated passport, confirmed sharing is disabled, reloaded the passport with the same saved skill, and verified `skill-display.html` returns HTTP 200.
+- Skill Passport Sprint 1 slice is complete. Next: consolidate job, hackathon, and skill recommendations into a shared structured explanation format without changing matching algorithms.
+
+### 2026-08-30 — UI/UX redesign audit and shared shell
+
+- Completed the mandatory read-only audit of 13 frontend pages, shared CSS/JavaScript, API hooks, forms, dynamic containers, Bootstrap components, navigation, responsive behavior, and JavaScript-dependent selectors.
+- Added a restrained professional design-token system and a reusable authenticated sidebar/top-header shell generated by shared JavaScript.
+- The shell uses only existing destinations, marks the current page, collapses off-canvas below 992px, preserves every page-specific ID/form/modal/API hook, and leaves public landing/login pages unchanged.
+- Page-by-page redesign and functional verification remain pending.
+
+### 2026-08-30 — Company engine Phase 2 persistence
+
+- Added persistent student target-company goals with normalized company name and target role.
+- Added ownership-isolated `JobActivity` records for saved/viewed and explicitly self-reported application outcomes.
+- Added an employer-opportunity adapter that mirrors authenticated ISOTOPES opportunities into the normalized job analytics layer while retaining `opportunityId` provenance and stronger `employer-provided` source classification.
+- API wiring and tests remain pending.
+- Employer opportunity create/update/close now synchronizes the corresponding normalized job record and active state.
+- Added authenticated target-company goal GET/PUT/DELETE routes, explainable personalized job recommendations, traceable company/role requirement aggregation, and ownership-isolated activity updates.
+- Focused tests and frontend remain pending.
+- Added focused coverage for target-company persistence and user isolation, target-aware recommendations, employer opportunity provenance, cited company aggregation, and private self-reported job activity.
+- Test execution and frontend remain pending.
+- New Phase 2 backend tests pass **7/7** and profile persistence tests pass **8/8**. The separately run legacy opportunity suite still fails in setup because its fixtures omit the already-required `companyId`; this pre-existing drift is unchanged.
+- Added protected `Jobs for Me` and `Company Insights` pages with real recommendations, explicit-skill comparison, source attribution/verification links, saved activity, persistent target-company goals, cited posting evidence, and truthful empty states.
+- Added dashboard navigation and protected-page registration. Static checks and live restart/browser verification remain pending.
+- Final focused verification passed: `npm.cmd test -- --runInBand __tests__/api/jobs.api.test.js __tests__/api/profilePersistence.api.test.js` — **15 passed, 0 failed; 2 suites passed**. Frontend/backend JavaScript syntax checks and `git diff --check` passed.
+- The first sandboxed rerun could not access the MongoDB memory-server binary; the identical permitted rerun passed and no code change was made in response to the environment-only failure.
+- Restarted the backend with Phase 2 loaded. Live HTTP journey passed: saved `Goodlord / Service Improvement Executive` as a target goal, loaded 50 recommendations, ranked the matching real Goodlord posting, persisted `saved` activity, and returned one identifiable company/role posting with two cited requirements.
+- `jobs-for-me.html` and `company-insights.html` both returned HTTP 200 from the running frontend.
+- Visual in-app browser verification could not run because no in-app or browser-extension session was available; no alternate browser automation surface was substituted. HTTP, syntax, API, and regression verification all passed.
+
+### 2026-08-30 — Real company requirement engine proof foundation
+
+- Added normalized `JobPosting` and `JobSyncRun` models without changing the existing employer `Opportunity` contract.
+- Added a source-isolated Arbeitnow provider using its documented public JSON API, a conservative normalizer/extractor, deduplicating upsert service, and deterministic student-to-job comparison.
+- Every extracted skill retains the source sentence or provider tag that supports it; raw source text and source/application URLs are preserved.
+- India coverage is not claimed from Arbeitnow. The provider is the external proof source; employer-provided ISOTOPES opportunities and a future credentialed India-capable provider remain separate follow-up work.
+- Added public paginated/filterable job listing and detail routes, authenticated student comparison, and protected institution synchronization.
+- Added focused API tests for normalization, source traceability, repeat-sync deduplication, profile comparison, evidence reporting, and safe provider failure.
+- Initial focused run correctly showed that client profile writes cannot manufacture skill evidence; the comparison test now creates trusted persisted evidence directly, without weakening that security boundary.
+- Focused verification passed: `npm.cmd test -- --runInBand __tests__/api/jobs.api.test.js __tests__/api/profilePersistence.api.test.js` — **12 passed, 0 failed; 2 suites passed**. JavaScript syntax and `git diff --check` also passed.
+- Live provider contract verification passed: Arbeitnow returned **175 records**. The first normalized record was `(Senior) Key Account Manager (m/w/d)` at `everdrop GmbH`, located in München, with a source posting timestamp and traceable Arbeitnow URL; its observed provider tag was retained as a requirement.
+- Added `npm run sync:jobs` as a resumable operator command.
+- First live sync: **175 fetched, 175 inserted, 0 updated, 0 skipped, 0 errors**.
+- Mandatory repeat sync: **175 fetched, 0 inserted, 175 updated, 0 skipped, 0 errors**, proving idempotent updates rather than duplication.
+- Restarted the backend and verified `/api/health` and `/api/jobs`; the public jobs API reported 175 active database records.
+- Live authenticated comparison passed using the real `Service Improvement Executive` posting from `Goodlord`, attributed to Arbeitnow with its traceable source URL. A newly persisted B.Tech/CSE student profile matched both observed source skills; the API returned 2 matched, 0 missing, 100%, and `not-specified-by-source` eligibility because that posting did not explicitly state education/experience requirements.
+- Phase 1 proof is complete. No company dashboard or target-company claim was created from static `CareerRole` seed data.
+
+### 2026-08-30 — Hackathon participation tracker backend
+
+- Added a dedicated `HackathonParticipation` model, separate from discovery bookmarks and self-reported registration activity.
+- Fields: authenticated student owner, optional discovered-hackathon reference, hackathon name, participation date, role, project name, normalized technology list, outcome/achievement, and timestamps.
+- Added authenticated `GET`, `POST`, `PUT`, and `DELETE /api/hackathon-participations` routes with ownership isolation, input length limits, required-field validation, duplicate technology removal, and future-date rejection.
+- Registered the new API in `backend/server.js`.
+- Tests and frontend integration remain pending.
+
+### 2026-08-30 — Participation tracker API tests added
+
+- Added API regression coverage for create/list/count, technology deduplication, Student A/B isolation, owned update/delete, missing fields, future dates, and unauthenticated writes.
+- Test execution remains pending.
+
+### 2026-08-30 — Reactive participation tracker frontend
+
+- Added frontend API clients to fetch, create, update, and delete authenticated hackathon participation records.
+- Extended `frontend/hackathons.html` with a tracker summary card, dynamic `Total Hackathons Attended` count, collapsible Add Hackathon form, and participation timeline/grid.
+- Added modular `frontend/js/hackathon-tracker.js`. After a successful database save, it prepends the new record and recalculates the counter immediately without a page reload; delete updates both list and counter the same way.
+- Added loading, empty, error, saving, success, validation, and confirmation states.
+- Added minimal participation-card styling consistent with the existing design.
+- Static verification and live backend restart remain pending.
+
+### 2026-08-30 — Participation tracker verified live
+
+- Static JavaScript checks and `git diff --check` passed.
+- Corrected regression run from the backend directory: `npm.cmd test -- --runInBand __tests__/api/hackathonParticipations.api.test.js __tests__/api/hackathons.api.test.js __tests__/api/profilePersistence.api.test.js` — **16 passed, 0 failed; 3 suites passed**.
+- Restarted the active backend with the participation API registered.
+- Live verification passed: registered a new student, created a Full-Stack Developer participation with Node.js/MongoDB/Bootstrap and Finalist outcome, fetched the authenticated list, and received `count: 1` with the saved fields intact.
+- Verified `http://localhost:8000/hackathons.html` returns HTTP 200 and contains the live tracker counter markup.
+- Tracker implementation is complete; the broader pre-existing legacy-suite reconciliation remains a separate recorded task.
 
 ### 2026-08-30 — Hackathon Discovery approved and initialized
 
@@ -225,4 +339,4 @@ Implement one genuine structured hackathon source end-to-end: verify the provide
 
 ## Exact Next Resumable Step
 
-Update the profile Skills UI so users explicitly edit self-declared level and `wantToImprove` without overwriting assessment evidence, then connect dashboard/gap pages to the analysis API. After frontend migration, reconcile the six legacy suites and run browser-level User A/B/C journeys.
+Phase 2 is implemented. Next: connect a browser session for visual/interactive QA; expose the full activity history/filter UI; add a credentialed India-capable provider such as Adzuna only after credentials are supplied; optionally persist scheduled company requirement snapshots; repair legacy opportunity fixtures that omit required `companyId`; then run the complete suite. Preserve the explicit distinction between employer-provided, externally observed, and general `CareerRole` guidance.

@@ -3,6 +3,7 @@ const router = express.Router();
 const Opportunity = require('../models/Opportunity');
 const Company = require('../models/Company');
 const { auth, authorize } = require('../middleware/auth');
+const { syncEmployerOpportunity } = require('../services/jobSources/employerOpportunityAdapter');
 
 // Get all opportunities (with filters)
 router.get('/', async (req, res) => {
@@ -65,6 +66,7 @@ router.post('/', auth, authorize('industry'), async (req, res) => {
     });
 
     await opportunity.save();
+    await syncEmployerOpportunity(opportunity);
 
     // Add to company's opportunities
     company.opportunities.push(opportunity._id);
@@ -94,6 +96,7 @@ router.put('/:id', auth, authorize('industry'), async (req, res) => {
       { ...req.body, updatedAt: Date.now() },
       { new: true }
     );
+    await syncEmployerOpportunity(updatedOpportunity);
 
     res.json({ success: true, opportunity: updatedOpportunity });
   } catch (err) {
@@ -116,6 +119,7 @@ router.patch('/:id/close', auth, authorize('industry'), async (req, res) => {
 
     opportunity.status = 'closed';
     await opportunity.save();
+    await syncEmployerOpportunity(opportunity);
 
     res.json({ success: true, opportunity });
   } catch (err) {

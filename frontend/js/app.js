@@ -578,6 +578,17 @@ async function fetchSkillAnalysis() {
     }
 }
 
+async function fetchSkillPassport() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/students/me/skill-passport`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to load skill passport');
+        return { success: true, passport: data.passport };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
 async function fetchRecommendedHackathons(params = {}) {
     try {
         const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== '' && value !== undefined));
@@ -633,6 +644,54 @@ async function fetchMyHackathons(status = '') {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Failed to fetch saved hackathons');
         return { success: true, activities: data.activities || [] };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function fetchHackathonParticipations() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathon-participations`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to fetch hackathon participations');
+        return { success: true, count: data.count || 0, participations: data.participations || [] };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function createHackathonParticipation(participation) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathon-participations`, {
+            method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(participation)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to add hackathon participation');
+        return { success: true, participation: data.participation };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function updateHackathonParticipation(id, participation) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathon-participations/${id}`, {
+            method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify(participation)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to update hackathon participation');
+        return { success: true, participation: data.participation };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+async function deleteHackathonParticipation(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hackathon-participations/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete hackathon participation');
+        return { success: true };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -884,6 +943,7 @@ async function fetchStudentApplications() {
  * Initialize on page load
  */
 document.addEventListener('DOMContentLoaded', function() {
+    initializeAppShell();
     // Check if user needs to be redirected to login
     checkAuthStatus();
     
@@ -894,11 +954,38 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
 });
 
+function initializeAppShell() {
+    const page = window.location.pathname.split('/').pop() || 'index.html';
+    const protectedPages = ['student-dashboard.html', 'student-profile.html', 'skill-assessment.html', 'skill-display.html', 'skill-gap-analysis.html', 'career-roadmap.html', 'opportunities.html', 'applications.html', 'hackathons.html', 'jobs-for-me.html', 'company-insights.html', 'industry-dashboard.html'];
+    if (!protectedPages.includes(page)) return;
+    const nav = document.querySelector('body > nav.navbar');
+    if (!nav) return;
+    const isIndustry = page === 'industry-dashboard.html';
+    const studentGroups = [
+        ['Overview', [['student-dashboard.html', 'Dashboard', 'fa-house']]],
+        ['Development', [['student-profile.html', 'Profile', 'fa-user'], ['skill-assessment.html', 'Assessment', 'fa-clipboard-check'], ['skill-display.html', 'Skill Passport', 'fa-fingerprint'], ['skill-gap-analysis.html', 'Skill Gap', 'fa-chart-line'], ['career-roadmap.html', 'Career Roadmap', 'fa-route']]],
+        ['Opportunities', [['jobs-for-me.html', 'Jobs for Me', 'fa-briefcase'], ['opportunities.html', 'Employer Opportunities', 'fa-building'], ['hackathons.html', 'Hackathons', 'fa-trophy'], ['applications.html', 'Applications', 'fa-folder-open']]],
+        ['Insights', [['company-insights.html', 'Target Company', 'fa-bullseye']]]
+    ];
+    const groups = isIndustry ? [['Overview', [['industry-dashboard.html', 'Industry Dashboard', 'fa-building']]]] : studentGroups;
+    const links = groups.map(([label, items]) => `<div class="app-nav-group"><div class="app-nav-label">${label}</div>${items.map(([href, text, icon]) => `<a class="app-nav-link ${page === href ? 'active' : ''}" href="${href}"><i class="fas ${icon}" aria-hidden="true"></i><span>${text}</span></a>`).join('')}</div>`).join('');
+    nav.className = 'app-sidebar';
+    nav.innerHTML = `<a class="app-brand" href="${isIndustry ? 'industry-dashboard.html' : 'student-dashboard.html'}"><span class="app-brand-mark">I</span><span><strong>ISOTOPES</strong><small>Career Intelligence</small></span></a><div class="app-nav">${links}</div><button class="app-nav-link app-logout" data-action="logout"><i class="fas fa-arrow-right-from-bracket"></i><span>Logout</span></button>`;
+    const header = document.createElement('header');
+    header.className = 'app-header';
+    const active = groups.flatMap(group => group[1]).find(item => item[0] === page);
+    header.innerHTML = `<button class="app-menu-button" type="button" aria-label="Open navigation"><i class="fas fa-bars"></i></button><div><div class="app-header-eyebrow">ISOTOPES</div><strong>${active ? active[1] : 'Workspace'}</strong></div><a class="app-profile-link" href="${isIndustry ? 'industry-dashboard.html' : 'student-profile.html'}" aria-label="Open profile"><i class="fas fa-circle-user"></i></a>`;
+    document.body.insertBefore(header, nav.nextSibling);
+    document.body.classList.add('has-app-shell');
+    header.querySelector('.app-menu-button').addEventListener('click', () => document.body.classList.toggle('app-nav-open'));
+    document.addEventListener('click', event => { if (document.body.classList.contains('app-nav-open') && !event.target.closest('.app-sidebar') && !event.target.closest('.app-menu-button')) document.body.classList.remove('app-nav-open'); });
+}
+
 /**
  * Check authentication status
  */
 function checkAuthStatus() {
-    const protectedPages = ['student-dashboard.html', 'student-profile.html', 'skill-assessment.html', 'skill-display.html', 'skill-gap-analysis.html', 'opportunities.html', 'applications.html', 'hackathons.html'];
+    const protectedPages = ['student-dashboard.html', 'student-profile.html', 'skill-assessment.html', 'skill-display.html', 'skill-gap-analysis.html', 'career-roadmap.html', 'opportunities.html', 'applications.html', 'hackathons.html', 'jobs-for-me.html', 'company-insights.html'];
     const currentPage = window.location.pathname.split('/').pop();
     
     if (protectedPages.includes(currentPage) && !isUserLoggedIn()) {
