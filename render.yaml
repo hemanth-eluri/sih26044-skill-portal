@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: sih26044-skill-portal
+    runtime: node
+    plan: free
+    buildCommand: npm run install:all
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false

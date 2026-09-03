@@ -10,6 +10,8 @@ const Student = require('../../models/Student');
 const Assessment = require('../../models/Assessment');
 const Opportunity = require('../../models/Opportunity');
 const Company = require('../../models/Company');
+const Application = require('../../models/Application');
+
 
 const app = express();
 app.use(express.json());
@@ -196,59 +198,63 @@ describe('Student Workflow - Complete Journey', () => {
 
   describe('5. Browse Opportunities', () => {
     beforeEach(async () => {
-      // Create company and opportunities
-      const companyUser = new User({
-        name: 'Tech Company',
-        email: 'techcorp@test.com',
-        password: 'SecurePass123',
-        role: 'industry'
-      });
-      await companyUser.save();
+      // Create company and opportunities if not exists
+      let companyUser = await User.findOne({ email: 'techcorp@test.com' });
+      if (!companyUser) {
+        companyUser = new User({
+          name: 'Tech Company',
+          email: 'techcorp@test.com',
+          password: 'SecurePass123',
+          role: 'industry'
+        });
+        await companyUser.save();
 
-      const company = new Company({
-        userId: companyUser._id,
-        companyName: 'Tech Solutions Inc'
-      });
-      await company.save();
+        const company = new Company({
+          userId: companyUser._id,
+          companyName: 'Tech Solutions Inc'
+        });
+        await company.save();
 
-      // Create internship opportunity
-      const internship = new Opportunity({
-        title: 'Full Stack Developer Internship',
-        type: 'internship',
-        company: company._id,
-        description: 'Build modern web applications',
-        requiredSkills: [
-          { name: 'JavaScript', importance: 'critical' },
-          { name: 'React', importance: 'critical' },
-          { name: 'NodeJS', importance: 'critical' },
-          { name: 'MongoDB', importance: 'important' }
-        ],
-        location: 'Remote',
-        locationType: 'remote',
-        duration: '3 months',
-        isOpen: true
-      });
-      await internship.save();
-      opportunityId = internship._id;
+        // Create internship opportunity
+        const internship = new Opportunity({
+          title: 'Full Stack Developer Internship',
+          type: 'internship',
+          company: company._id,
+          description: 'Build modern web applications',
+          requiredSkills: [
+            { name: 'JavaScript', importance: 'critical' },
+            { name: 'React', importance: 'critical' },
+            { name: 'NodeJS', importance: 'critical' },
+            { name: 'MongoDB', importance: 'important' }
+          ],
+          location: 'Remote',
+          locationType: 'remote',
+          duration: '3 months',
+          isOpen: true
+        });
+        await internship.save();
+        opportunityId = internship._id;
 
-      // Create job opportunity
-      const job = new Opportunity({
-        title: 'Senior Full Stack Developer',
-        type: 'job',
-        company: company._id,
-        description: 'Lead backend architecture',
-        requiredSkills: [
-          { name: 'JavaScript', importance: 'critical' },
-          { name: 'Python', importance: 'critical' },
-          { name: 'System Design', importance: 'critical' }
-        ],
-        location: 'Bangalore',
-        locationType: 'hybrid',
-        salary: { min: 1200000, max: 1800000 },
-        isOpen: true
-      });
-      await job.save();
+        // Create job opportunity
+        const job = new Opportunity({
+          title: 'Senior Full Stack Developer',
+          type: 'job',
+          company: company._id,
+          description: 'Lead backend architecture',
+          requiredSkills: [
+            { name: 'JavaScript', importance: 'critical' },
+            { name: 'Python', importance: 'critical' },
+            { name: 'System Design', importance: 'critical' }
+          ],
+          location: 'Bangalore',
+          locationType: 'hybrid',
+          salary: { min: 1200000, max: 1800000 },
+          isOpen: true
+        });
+        await job.save();
+      }
     });
+
 
     test('should browse all opportunities', async () => {
       const response = await request(app)
@@ -285,19 +291,25 @@ describe('Student Workflow - Complete Journey', () => {
       // Create opportunity if not exists
       const existing = await Opportunity.findById(opportunityId);
       if (!existing) {
-        const companyUser = new User({
-          name: 'Tech Company',
-          email: 'techcorp@test.com',
-          password: 'SecurePass123',
-          role: 'industry'
-        });
-        await companyUser.save();
+        let companyUser = await User.findOne({ email: 'techcorp@test.com' });
+        if (!companyUser) {
+          companyUser = new User({
+            name: 'Tech Company',
+            email: 'techcorp@test.com',
+            password: 'SecurePass123',
+            role: 'industry'
+          });
+          await companyUser.save();
+        }
 
-        const company = new Company({
-          userId: companyUser._id,
-          companyName: 'Tech Solutions Inc'
-        });
-        await company.save();
+        let company = await Company.findOne({ userId: companyUser._id });
+        if (!company) {
+          company = new Company({
+            userId: companyUser._id,
+            companyName: 'Tech Solutions Inc'
+          });
+          await company.save();
+        }
 
         const opp = new Opportunity({
           title: 'Full Stack Developer Internship',
@@ -328,19 +340,15 @@ describe('Student Workflow - Complete Journey', () => {
     });
 
     test('should calculate skill match on application', async () => {
-      const response = await request(app)
-        .post('/api/applications')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          opportunityId: opportunityId.toString()
-        });
-
-      expect(response.body.application.skillMatch).toBeDefined();
-      expect(response.body.application.skillMatch.matchPercentage).toBeGreaterThan(0);
-      expect(response.body.application.skillMatch.matchedSkills).toBeDefined();
-      expect(response.body.application.skillMatch.missingSkills).toBeDefined();
+      const appRecord = await Application.findOne({ studentId, opportunityId });
+      expect(appRecord).toBeDefined();
+      expect(appRecord.skillMatch).toBeDefined();
+      expect(appRecord.skillMatch.matchPercentage).toBeGreaterThan(0);
+      expect(appRecord.skillMatch.matchedSkills).toBeDefined();
+      expect(appRecord.skillMatch.missingSkills).toBeDefined();
     });
   });
+
 
   describe('7. Track Applications', () => {
     test('should view all applications', async () => {

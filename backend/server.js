@@ -33,13 +33,22 @@ app.use('/api/hackathon-participations', require('./routes/hackathonParticipatio
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/companies', require('./routes/companies'));
 
+const path = require('path');
+const frontendPath = path.join(__dirname, '../frontend');
+
+// Serve static frontend files
+app.use(express.static(frontendPath));
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running ✅' });
 });
 
-// Root endpoint
+// Root endpoint: serve index.html for browser requests, or JSON API info for API clients
 app.get('/', (req, res) => {
+  if (req.accepts('html')) {
+    return res.sendFile(path.join(frontendPath, 'index.html'));
+  }
   res.json({
     message: 'ISOTOPES Backend API',
     version: '1.0.0',
@@ -47,6 +56,7 @@ app.get('/', (req, res) => {
     description: 'Portal for Academia–Industry Collaboration for Skill Mapping, Internships and Placement'
   });
 });
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

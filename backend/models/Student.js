@@ -40,6 +40,8 @@ const StudentSchema = new mongoose.Schema({
     {
       degree: String,
       institution: String,
+      school: String,
+      field: String,
       startDate: Date,
       endDate: Date,
       cgpa: Number,
@@ -115,7 +117,7 @@ const StudentSchema = new mongoose.Schema({
     }
   ],
   targetRole: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.Mixed,
     ref: 'CareerRole'
   },
   assessmentResults: [
@@ -144,6 +146,27 @@ const StudentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+});
+
+StudentSchema.pre('validate', function(next) {
+  if (Array.isArray(this.education)) {
+    this.education.forEach(e => {
+      if (!e.institution && e.school) e.institution = e.school;
+      if (!e.school && e.institution) e.school = e.institution;
+    });
+  }
+  next();
+});
+
+StudentSchema.pre('save', function(next) {
+  let score = 0;
+  if (this.headline || this.institution || this.degree) score += 20;
+  if (this.education && this.education.length > 0) score += 25;
+  if (this.skills && this.skills.length > 0) score += 25;
+  if (this.projects && this.projects.length > 0) score += 15;
+  if (this.targetRole || this.primaryTargetRole) score += 15;
+  this.profileCompletion = Math.min(100, Math.max(this.profileCompletion || 0, score));
+  next();
 });
 
 module.exports = mongoose.model('Student', StudentSchema);

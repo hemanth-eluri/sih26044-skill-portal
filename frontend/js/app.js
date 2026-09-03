@@ -3,11 +3,16 @@
  * Handles authentication, navigation, and API calls
  */
 
-const API_BASE_URL =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:5000/api'
-        : 'https://YOUR-RENDER-BACKEND.onrender.com/api';
+const API_BASE_URL = (function() {
+    if (typeof window === 'undefined') return 'http://localhost:5000/api';
+    if (window.API_BASE_URL) return window.API_BASE_URL;
+    if (window.location.protocol === 'file:') return 'http://localhost:5000/api';
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '5000') {
+        return 'http://localhost:5000/api';
+    }
+    return `${window.location.origin}/api`;
+})();
+
 
 function escapeHtml(value = '') {
     return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
@@ -436,8 +441,9 @@ async function fetchAssessments() {
             throw new Error(data.error || 'Failed to fetch assessments');
         }
 
-        return { success: true, assessments: data.assessments };
+        return { success: true, assessments: Array.isArray(data) ? data : (data.assessments || []) };
     } catch (error) {
+
         console.error('Fetch assessments error:', error);
         return { success: false, error: error.message };
     }
@@ -839,7 +845,7 @@ async function fetchOpportunities(filters = {}) {
             throw new Error(data.error || 'Failed to fetch opportunities');
         }
 
-        return { success: true, opportunities: data.opportunities };
+        return { success: true, opportunities: Array.isArray(data) ? data : (data.opportunities || []) };
     } catch (error) {
         console.error('Fetch opportunities error:', error);
         return { success: false, error: error.message };
@@ -858,8 +864,9 @@ async function fetchOpportunity(id) {
             throw new Error(data.error || 'Failed to fetch opportunity');
         }
 
-        return { success: true, opportunity: data.opportunity };
+        return { success: true, opportunity: data.opportunity || data };
     } catch (error) {
+
         console.error('Fetch opportunity error:', error);
         return { success: false, error: error.message };
     }
@@ -932,8 +939,9 @@ async function fetchStudentApplications() {
             throw new Error(data.error || 'Failed to fetch applications');
         }
 
-        return { success: true, applications: data.applications };
+        return { success: true, applications: Array.isArray(data) ? data : (data.applications || []) };
     } catch (error) {
+
         console.error('Fetch applications error:', error);
         return { success: false, error: error.message };
     }

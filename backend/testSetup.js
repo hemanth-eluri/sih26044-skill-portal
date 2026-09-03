@@ -30,13 +30,18 @@ afterAll(async () => {
 });
 
 /**
- * Clear all collections between tests
+ * Clear all collections between tests (skipped for sequential integration tests)
  */
 afterEach(async () => {
+  const testPath = expect.getState().testPath || '';
+  if (testPath.toLowerCase().includes('integration')) {
+    return;
+  }
+
   const collections = mongoose.connection.collections;
-  
   for (const key in collections) {
     const collection = collections[key];
     await collection.deleteMany({});
   }
 });
+

@@ -343,7 +343,12 @@ router.get('/profile', auth, authorize('student'), async (req, res) => {
       return res.status(404).json({ error: 'Student profile not found' });
     }
     const user = await User.findById(req.user.userId).select('name email phone location bio');
-    res.json({ success: true, student, user });
+    const profile = student.toObject();
+    profile.education = profile.education || [];
+    profile.experience = profile.experience || [];
+    profile.projects = profile.projects || [];
+    profile.skills = profile.skills || [];
+    res.json({ success: true, student, profile, user });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch profile: ' + err.message });
   }
@@ -352,7 +357,7 @@ router.get('/profile', auth, authorize('student'), async (req, res) => {
 // Update basic info
 router.put('/profile', auth, authorize('student'), async (req, res) => {
   try {
-    const { headline, name, phone, location, bio, contactEmail } = req.body;
+    const { headline, name, phone, location, bio, contactEmail, targetRole } = req.body;
     if (contactEmail !== undefined && (typeof contactEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()))) {
       return res.status(400).json({ success: false, error: 'Please enter a valid contact email' });
     }
@@ -360,14 +365,16 @@ router.put('/profile', auth, authorize('student'), async (req, res) => {
       return res.status(400).json({ error: 'Name cannot be empty' });
     }
 
-    const student = await Student.findOneAndUpdate(
-      { userId: req.user.userId },
-      { headline, ...(contactEmail === undefined ? {} : { contactEmail: contactEmail.trim().toLowerCase() }), updatedAt: Date.now() },
-      { new: true }
-    );
+    const student = await Student.findOne({ userId: req.user.userId });
     if (!student) {
       return res.status(404).json({ error: 'Student profile not found' });
     }
+
+    if (headline !== undefined) student.headline = headline;
+    if (contactEmail !== undefined) student.contactEmail = contactEmail.trim().toLowerCase();
+    if (targetRole !== undefined) student.targetRole = targetRole;
+    student.updatedAt = Date.now();
+    await student.save();
 
     const user = await User.findByIdAndUpdate(
       req.user.userId,
@@ -384,25 +391,27 @@ router.put('/profile', auth, authorize('student'), async (req, res) => {
 // Add education
 router.post('/education', auth, authorize('student'), async (req, res) => {
   try {
-    const { degree, institution, startDate, endDate, cgpa, description } = req.body;
+    const degree = req.body.degree;
+    const institution = req.body.institution || req.body.school;
+    const school = institution;
+    const field = req.body.field;
+    const { startDate, endDate, cgpa, description } = req.body;
     const validationError = validateEducation({ degree, institution, startDate, endDate, cgpa });
     if (validationError) return res.status(400).json({ error: validationError });
-    const student = await Student.findOneAndUpdate(
-      { userId: req.user.userId },
-      {
-        $push: {
-          education: { degree, institution, startDate, endDate, cgpa, description }
-        },
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
+
+    const student = await Student.findOne({ userId: req.user.userId });
     if (!student) return res.status(404).json({ error: 'Student profile not found' });
+
+    student.education.push({ degree, institution, school, field, startDate, endDate, cgpa, description });
+    student.updatedAt = Date.now();
+    await student.save();
+
     res.status(201).json({ success: true, student });
   } catch (err) {
     res.status(500).json({ error: 'Failed to add education: ' + err.message });
   }
 });
+
 
 // Update education
 router.put('/education/:id', auth, authorize('student'), async (req, res) => {
@@ -555,22 +564,18 @@ router.post('/skills', auth, authorize('student'), async (req, res) => {
       return res.status(400).json({ error: 'Skill name is required' });
     }
 
-    const existingStudent = await Student.findOne({ userId: req.user.userId });
-    if (!existingStudent) {
+    const student = await Student.findOne({ userId: req.user.userId });
+    if (!student) {
       return res.status(404).json({ error: 'Student profile not found' });
     }
-    if (existingStudent.skills.some((skill) => skill.name.toLowerCase() === name.trim().toLowerCase())) {
+    if (student.skills.some((skill) => skill.name.toLowerCase() === name.trim().toLowerCase())) {
       return res.status(400).json({ error: 'This skill is already on your profile' });
     }
 
-    const student = await Student.findOneAndUpdate(
-      { userId: req.user.userId },
-      {
-        $push: { skills: { name: name.trim(), selfDeclaredLevel: level, level, wantToImprove: Boolean(wantToImprove), evidence: [], endorsements: 0 } },
-        updatedAt: Date.now()
-      },
-      { new: true }
-    );
+    student.skills.push({ name: name.trim(), selfDeclaredLevel: level, level, wantToImprove: Boolean(wantToImprove), evidence: [], endorsements: 0 });
+    student.updatedAt = Date.now();
+    await student.save();
+
     res.status(201).json({ success: true, student });
   } catch (err) {
     res.status(500).json({ error: 'Failed to add skill: ' + err.message });
@@ -580,15 +585,18 @@ router.post('/skills', auth, authorize('student'), async (req, res) => {
 // Delete skill
 router.delete('/skills/:id', auth, authorize('student'), async (req, res) => {
   try {
-    const student = await Student.findOneAndUpdate(
-      { userId: req.user.userId },
-      { $pull: { skills: { _id: req.params.id } }, updatedAt: Date.now() },
-      { new: true }
-    );
+    const student = await Student.findOne({ userId: req.user.userId });
+    if (!student) return res.status(404).json({ error: 'Student profile not found' });
+
+    student.skills = student.skills.filter(s => s._id.toString() !== req.params.id);
+    student.updatedAt = Date.now();
+    await student.save();
+
     res.json({ success: true, student });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete skill: ' + err.message });
   }
 });
+
 
 module.exports = router;

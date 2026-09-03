@@ -18,15 +18,17 @@ function publicAssessment(assessment) {
   const value = assessment.toObject ? assessment.toObject() : assessment;
   return {
     ...value,
-    questions: value.questions.map(question => ({
+    questions: (value.questions || []).map(question => ({
       _id: question._id,
-      questionText: question.questionText,
+      questionText: question.questionText || question.text,
+      text: question.text || question.questionText,
       type: question.type,
       options: question.options,
       skillTested: question.skillTested
     }))
   };
 }
+
 
 const normalizeSkill = value => String(value || '').trim().toLowerCase();
 
@@ -239,12 +241,14 @@ router.get('/history', auth, authorize('student'), async (req, res) => {
 // Get all assessments
 router.get('/', async (req, res) => {
   try {
-    const assessments = await Assessment.find().select('-questions');
-    res.json({ success: true, assessments });
+    const assessments = await Assessment.find();
+    const formatted = assessments.map(publicAssessment);
+    res.json(formatted);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch assessments: ' + err.message });
   }
 });
+
 
 router.post('/generate', auth, authorize('student'), async (req, res) => {
   try {
@@ -311,11 +315,15 @@ router.get('/results/:studentId', auth, async (req, res) => {
 // Get specific assessment
 router.get('/:id', async (req, res) => {
   try {
+    if (!require('mongoose').isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Assessment not found' });
+    }
     const assessment = await Assessment.findById(req.params.id);
     if (!assessment) {
       return res.status(404).json({ error: 'Assessment not found' });
     }
-    res.json({ success: true, assessment: publicAssessment(assessment) });
+    const pub = publicAssessment(assessment);
+    res.json({ ...pub, success: true, assessment: pub });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch assessment: ' + err.message });
   }
@@ -327,6 +335,9 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
     const { answers, timeSpent } = req.body;
     if (!Array.isArray(answers)) {
       return res.status(400).json({ error: 'Answers must be an array' });
+    }
+    if (!require('mongoose').isValidObjectId(req.params.id)) {
+      return res.status(404).json({ error: 'Assessment not found' });
     }
     const assessment = await Assessment.findById(req.params.id);
 
@@ -341,7 +352,7 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
     let correctAnswers = 0;
     let skillScores = {};
 
-    assessment.skillsAssessed.forEach(skill => {
+    (assessment.skillsAssessed || []).forEach(skill => {
       skillScores[skill] = { score: 0, count: 0 };
     });
 
@@ -349,15 +360,18 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
       const question = assessment.questions[index];
       if (!question) return null;
       const skill = question.skillTested;
-      if (skillScores[skill]) skillScores[skill].count += 1;
+      if (skill) {
+        if (!skillScores[skill]) skillScores[skill] = { score: 0, count: 0 };
+        skillScores[skill].count += 1;
+      }
       const answerIndex = Number(answer);
-      const selectedAnswer = Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < question.options.length
+      const selectedAnswer = Number.isInteger(answerIndex) && answerIndex >= 0 && question.options && answerIndex < question.options.length
         ? question.options[answerIndex]
         : answer;
-      const isCorrect = selectedAnswer === question.correctAnswer;
+      const isCorrect = String(selectedAnswer).trim().toLowerCase() === String(question.correctAnswer).trim().toLowerCase();
       if (isCorrect) {
         correctAnswers++;
-        if (skillScores[skill]) {
+        if (skill && skillScores[skill]) {
           skillScores[skill].score += 1;
         }
       }
@@ -365,7 +379,7 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
     });
 
     const score = Math.round((correctAnswers / assessment.questions.length) * 100);
-    const passed = score >= assessment.passingScore;
+    const passed = score >= (assessment.passingScore !== undefined ? assessment.passingScore : 60);
 
     // Calculate skill levels
     const skillScoresArray = Object.entries(skillScores).map(([skill, data]) => {
@@ -402,7 +416,7 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
 
     // Update skills based on assessment
     skillScoresArray.forEach(skillData => {
-      const existingSkill = student.skills.find(s => s.name === skillData.skill);
+      const existingSkill = student.skills.find(s => s.name.toLowerCase() === skillData.skill.toLowerCase());
       if (existingSkill) {
         existingSkill.level = skillData.level;
         existingSkill.evidence.push({
@@ -427,8 +441,20 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
 
     await student.save();
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
+      score: correctAnswers,
+      scorePercentage: score,
+      passed,
+      correctAnswers,
+      totalQuestions: assessment.questions.length,
+      skillScores: skillScores,
+      feedback: answerRecords.map((a, i) => ({
+        question: (assessment.questions[i] && (assessment.questions[i].text || assessment.questions[i].questionText)) || '',
+        isCorrect: a ? a.isCorrect : false,
+        correctAnswer: assessment.questions[i] ? assessment.questions[i].correctAnswer : '',
+        explanation: assessment.questions[i] ? assessment.questions[i].explanation : ''
+      })),
       result: {
         score,
         passed,
@@ -437,6 +463,7 @@ router.post('/:id/submit', auth, authorize('student'), async (req, res) => {
         skillScores: skillScoresArray
       }
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to submit assessment: ' + err.message });

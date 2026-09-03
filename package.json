@@ -1,0 +1,24 @@
+{
+  "name": "isotopes-skill-portal",
+  "version": "1.0.0",
+  "description": "ISOTOPES - SIH26044 Portal for Academia–Industry Collaboration",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "dev:memory-db": "npm --prefix backend run dev:memory-db",
+    "seed": "npm --prefix backend run seed",
+    "test": "npm --prefix backend test",
+    "test:unit": "npm --prefix backend run test:unit",
+    "test:api": "npm --prefix backend run test:api",
+    "test:integration": "npm --prefix backend run test:integration",
+    "install:all": "npm --prefix backend install"
+  },
+  "keywords": [
+    "sih26044",
+    "isotopes",
+    "skill-mapping",
+    "internship-portal"
+  ],
+  "author": "ISOTOPES Team",
+  "license": "MIT"
+}

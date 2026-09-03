@@ -168,23 +168,29 @@ describe('Industry Workflow - Complete Journey', () => {
 
     beforeEach(async () => {
       // Create a student who will apply
-      const studentUser = new User({
-        name: 'Priya Sharma',
-        email: 'priya@student.com',
-        password: 'SecurePass123',
-        role: 'student'
-      });
-      await studentUser.save();
+      let studentUser = await User.findOne({ email: 'priya@student.com' });
+      if (!studentUser) {
+        studentUser = new User({
+          name: 'Priya Sharma',
+          email: 'priya@student.com',
+          password: 'SecurePass123',
+          role: 'student'
+        });
+        await studentUser.save();
+      }
 
-      const student = new Student({
-        userId: studentUser._id,
-        skills: [
-          { name: 'JavaScript', level: 'intermediate' },
-          { name: 'React', level: 'intermediate' },
-          { name: 'CSS', level: 'beginner' }
-        ]
-      });
-      await student.save();
+      let student = await Student.findOne({ userId: studentUser._id });
+      if (!student) {
+        student = new Student({
+          userId: studentUser._id,
+          skills: [
+            { name: 'JavaScript', level: 'intermediate' },
+            { name: 'React', level: 'intermediate' },
+            { name: 'CSS', level: 'beginner' }
+          ]
+        });
+        await student.save();
+      }
       studentId = student._id;
 
       studentToken = require('jsonwebtoken').sign(
@@ -193,14 +199,20 @@ describe('Industry Workflow - Complete Journey', () => {
         { expiresIn: '7d' }
       );
 
-      // Student applies for internship
-      await request(app)
-        .post('/api/applications')
-        .set('Authorization', `Bearer ${studentToken}`)
-        .send({
-          opportunityId: opportunityIds[0].toString()
-        });
+      // Student applies for internship if not already applied
+      const existingApp = await Application.findOne({
+        $or: [{ studentId: student._id }, { student: student._id }]
+      });
+      if (!existingApp) {
+        await request(app)
+          .post('/api/applications')
+          .set('Authorization', `Bearer ${studentToken}`)
+          .send({
+            opportunityId: opportunityIds[0].toString()
+          });
+      }
     });
+
 
     test('should view applications for company', async () => {
       const response = await request(app)
@@ -242,23 +254,29 @@ describe('Industry Workflow - Complete Journey', () => {
 
     beforeEach(async () => {
       // Create student
-      const studentUser = new User({
-        name: 'Amit Patel',
-        email: 'amit@student.com',
-        password: 'SecurePass123',
-        role: 'student'
-      });
-      await studentUser.save();
+      let studentUser = await User.findOne({ email: 'amit@student.com' });
+      if (!studentUser) {
+        studentUser = new User({
+          name: 'Amit Patel',
+          email: 'amit@student.com',
+          password: 'SecurePass123',
+          role: 'student'
+        });
+        await studentUser.save();
+      }
 
-      const student = new Student({
-        userId: studentUser._id,
-        skills: [
-          { name: 'JavaScript', level: 'advanced' },
-          { name: 'React', level: 'advanced' },
-          { name: 'CSS', level: 'intermediate' }
-        ]
-      });
-      await student.save();
+      let student = await Student.findOne({ userId: studentUser._id });
+      if (!student) {
+        student = new Student({
+          userId: studentUser._id,
+          skills: [
+            { name: 'JavaScript', level: 'advanced' },
+            { name: 'React', level: 'advanced' },
+            { name: 'CSS', level: 'intermediate' }
+          ]
+        });
+        await student.save();
+      }
 
       studentToken = require('jsonwebtoken').sign(
         { userId: studentUser._id, email: studentUser.email, role: 'student' },
@@ -266,15 +284,24 @@ describe('Industry Workflow - Complete Journey', () => {
         { expiresIn: '7d' }
       );
 
-      // Student applies
-      const appResponse = await request(app)
-        .post('/api/applications')
-        .set('Authorization', `Bearer ${studentToken}`)
-        .send({
-          opportunityId: opportunityIds[0].toString()
-        });
+      // Student applies or reuse existing application
+      let existingApplication = await Application.findOne({
+        studentId: student._id,
+        opportunityId: opportunityIds[0]
+      });
 
-      applicationId = appResponse.body.application._id;
+      if (!existingApplication) {
+        const appResponse = await request(app)
+          .post('/api/applications')
+          .set('Authorization', `Bearer ${studentToken}`)
+          .send({
+            opportunityId: opportunityIds[0].toString()
+          });
+
+        applicationId = appResponse.body.application._id;
+      } else {
+        applicationId = existingApplication._id;
+      }
     });
 
     test('should update application to shortlisted', async () => {
@@ -287,8 +314,8 @@ describe('Industry Workflow - Complete Journey', () => {
 
       expect(response.status).toBe(200);
 
-      const app = await Application.findById(applicationId);
-      expect(app.status).toBe('shortlisted');
+      const updatedApp = await Application.findById(applicationId);
+      expect(updatedApp.status).toBe('shortlisted');
     });
 
     test('should update application to accepted', async () => {
@@ -304,8 +331,8 @@ describe('Industry Workflow - Complete Journey', () => {
 
       expect(response.status).toBe(200);
 
-      const app = await Application.findById(applicationId);
-      expect(app.status).toBe('accepted');
+      const updatedApp = await Application.findById(applicationId);
+      expect(updatedApp.status).toBe('accepted');
     });
 
     test('should track status change timeline', async () => {
@@ -319,10 +346,11 @@ describe('Industry Workflow - Complete Journey', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ status: 'accepted' });
 
-      const app = await Application.findById(applicationId);
-      expect(app.timeline).toBeDefined();
-      expect(app.timeline.length).toBeGreaterThan(0);
+      const updatedApp = await Application.findById(applicationId);
+      expect(updatedApp.timeline).toBeDefined();
+      expect(updatedApp.timeline.length).toBeGreaterThan(0);
     });
+
   });
 
   describe('7. Manage Opportunities', () => {

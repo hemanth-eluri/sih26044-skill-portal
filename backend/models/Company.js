@@ -13,9 +13,10 @@ const CompanySchema = new mongoose.Schema({
   industry: String,
   companySize: {
     type: String,
-    enum: ['startup', 'small', 'medium', 'large', 'enterprise'],
     default: 'medium'
   },
+  size: String,
+  location: String,
   website: String,
   description: String,
   logo: String,
@@ -48,6 +49,14 @@ const CompanySchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+});
+
+CompanySchema.pre('validate', function(next) {
+  if (!this.size && this.companySize) this.size = this.companySize;
+  if (!this.companySize && this.size) this.companySize = this.size;
+  if (!this.location && this.headquarters) this.location = this.headquarters;
+  if (!this.headquarters && this.location) this.headquarters = this.location;
+  next();
 });
 
 module.exports = mongoose.model('Company', CompanySchema);

@@ -287,9 +287,10 @@ describe('Application API', () => {
 
       expect(response.status).toBe(200);
 
-      const app = await Application.findById(appId);
-      expect(app.status).toBe('shortlisted');
+      const updatedApplication = await Application.findById(appId);
+      expect(updatedApplication.status).toBe('shortlisted');
     });
+
 
     test('should only allow company to update status', async () => {
       const appResponse = await request(app)
@@ -352,10 +353,11 @@ describe('Application API', () => {
         .set('Authorization', `Bearer ${industryToken}`)
         .send({ status: 'shortlisted' });
 
-      const app = await Application.findById(appId);
-      expect(app.timeline).toBeDefined();
-      expect(app.timeline.length).toBeGreaterThan(0);
+      const updatedApp = await Application.findById(appId);
+      expect(updatedApp.timeline).toBeDefined();
+      expect(updatedApp.timeline.length).toBeGreaterThan(0);
     });
+
 
   });
 

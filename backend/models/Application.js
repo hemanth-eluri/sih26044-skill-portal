@@ -3,18 +3,27 @@ const mongoose = require('mongoose');
 const ApplicationSchema = new mongoose.Schema({
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
-    required: true
+    ref: 'Student'
+  },
+  student: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student'
   },
   opportunityId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Opportunity',
-    required: true
+    ref: 'Opportunity'
+  },
+  opportunity: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Opportunity'
   },
   companyId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company',
-    required: true
+    ref: 'Company'
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company'
   },
   status: {
     type: String,
@@ -35,7 +44,10 @@ const ApplicationSchema = new mongoose.Schema({
   timeline: [
     {
       status: String,
-      date: Date,
+      date: {
+        type: Date,
+        default: Date.now
+      },
       notes: String
     }
   ],
@@ -65,6 +77,19 @@ const ApplicationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+ApplicationSchema.pre('validate', function(next) {
+  if (!this.studentId && this.student) this.studentId = this.student;
+  if (!this.student && this.studentId) this.student = this.studentId;
+  if (!this.opportunityId && this.opportunity) this.opportunityId = this.opportunity;
+  if (!this.opportunity && this.opportunityId) this.opportunity = this.opportunityId;
+  if (!this.companyId && this.company) this.companyId = this.company;
+  if (!this.company && this.companyId) this.company = this.companyId;
+  next();
 });
 
 ApplicationSchema.index({ studentId: 1, opportunityId: 1 }, { unique: true });

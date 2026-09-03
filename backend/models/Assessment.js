@@ -7,22 +7,24 @@ const AssessmentSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['programming', 'data-science', 'web-development', 'mobile-development', 'devops', 'cloud'],
+    lowercase: true,
+    trim: true,
     required: true
   },
   description: String,
   difficulty: {
     type: String,
-    enum: ['beginner', 'intermediate', 'advanced'],
+    lowercase: true,
+    trim: true,
     default: 'intermediate'
   },
   estimatedTime: Number, // in minutes
   questions: [
     {
       questionText: String,
+      text: String,
       type: {
         type: String,
-        enum: ['multiple-choice', 'true-false', 'short-answer'],
         default: 'multiple-choice'
       },
       options: [String],
@@ -35,11 +37,33 @@ const AssessmentSchema = new mongoose.Schema({
     type: Number,
     default: 60
   },
-  skillsAssessed: [String],
+  skillsAssessed: {
+    type: [String],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
+});
+
+AssessmentSchema.pre('validate', function(next) {
+  if (Array.isArray(this.questions)) {
+    this.questions.forEach(q => {
+      if (!q.questionText && q.text) q.questionText = q.text;
+      if (!q.text && q.questionText) q.text = q.questionText;
+    });
+  }
+  if (!this.skillsAssessed || this.skillsAssessed.length === 0) {
+    const skills = new Set();
+    if (Array.isArray(this.questions)) {
+      this.questions.forEach(q => {
+        if (q.skillTested) skills.add(q.skillTested);
+      });
+    }
+    this.skillsAssessed = [...skills];
+  }
+  next();
 });
 
 const AssessmentResultSchema = new mongoose.Schema({
@@ -99,7 +123,13 @@ const AssessmentResultSchema = new mongoose.Schema({
   }]
 });
 
-module.exports = {
-  Assessment: mongoose.model('Assessment', AssessmentSchema),
-  AssessmentResult: mongoose.model('AssessmentResult', AssessmentResultSchema)
-};
+const Assessment = mongoose.model('Assessment', AssessmentSchema);
+const AssessmentResult = mongoose.model('AssessmentResult', AssessmentResultSchema);
+
+Assessment.Assessment = Assessment;
+Assessment.AssessmentResult = AssessmentResult;
+
+module.exports = Assessment;
+module.exports.Assessment = Assessment;
+module.exports.AssessmentResult = AssessmentResult;
+
